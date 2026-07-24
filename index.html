@@ -8,27 +8,53 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Custom Tailwind Configuration to match Tinkoff / T-Bank brand colors
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tinkoff: {
+              yellow: '#FFDD2D',
+              yellowHover: '#FCC50D',
+              dark: '#1F1F22',
+              card: '#2A2A2D',
+              border: '#38383C',
+              text: '#FFFFFF',
+              muted: '#929296'
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="bg-[var(--tg-theme-bg-color,#f3f4f6)] text-[var(--tg-theme-text-color,#111827)] p-4 min-h-screen">
+<body class="bg-tinkoff-dark text-tinkoff-text p-4 min-h-screen font-sans antialiased selection:bg-tinkoff-yellow selection:text-black">
 
-  <header class="mb-6 text-center">
-    <h1 class="text-2xl font-bold text-blue-600">Чеклист АкТ-ивностей</h1>
-    <p class="text-xs text-gray-500 mt-1">Отсканируйте QR соответствующей активности что пометить ее выполненой</p>
+  <header class="mb-6 text-center max-w-md mx-auto pt-2">
+    <!-- Brand Logo / Header Badge -->
+    <div class="inline-flex items-center justify-center w-12 h-12 bg-tinkoff-yellow text-black font-extrabold text-2xl rounded-2xl mb-3 shadow-lg shadow-tinkoff-yellow/10">
+      T
+    </div>
+    <h1 class="text-2xl font-bold tracking-tight text-white">Чеклист АкТ-ивностей</h1>
+    <p class="text-xs text-tinkoff-muted mt-1">Отсканируйте QR соответствующей активности что пометить ее выполненой</p>
     
     <!-- Progress Indicator -->
-    <div class="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 max-w-xs mx-auto overflow-hidden">
-      <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-    </div>
-    <div class="flex justify-between items-center max-w-xs mx-auto mt-1 px-1">
-      <span id="progress-text" class="text-xs font-semibold text-gray-500">0/3 Completed</span>
-      <button onclick="resetProgress()" class="text-[10px] text-red-500 hover:underline">Сбросить прогресс</button>
+    <div class="mt-5 bg-tinkoff-card border border-tinkoff-border rounded-2xl p-4 shadow-sm">
+      <div class="flex justify-between items-center mb-2">
+        <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/3 Выполнено</span>
+        <button onclick="resetProgress()" class="text-xs text-tinkoff-yellow hover:underline font-medium">Сбросить прогресс</button>
+      </div>
+      <div class="bg-tinkoff-dark rounded-full h-2 overflow-hidden">
+        <div id="progress-bar" class="bg-tinkoff-yellow h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
     </div>
   </header>
 
   <!-- Activity List -->
   <div id="activity-list" class="space-y-3 max-w-md mx-auto">
-    <!-- Loading skeleton until data is loaded -->
-    <div class="text-center text-sm text-gray-400 py-8">Грузим активности...</div>
+    <!-- Loading skeleton -->
+    <div class="text-center text-xs text-tinkoff-muted py-8">Грузим активности...</div>
   </div>
 
   <script>
@@ -43,18 +69,17 @@
       { id: 3, title: 'Перетанцуйте ведущего', qrCode: 'network_789', completed: false }
     ];
 
+
     let currentActivityId = null;
 
     // --- CLOUD STORAGE PERSISTENCE LOGIC --- //
 
-    // Load saved data on startup
     function loadSavedState() {
       if (tg.CloudStorage) {
         tg.CloudStorage.getItem('user_activities', (err, value) => {
           if (!err && value) {
             try {
               const savedStates = JSON.parse(value);
-              // Merge saved completed statuses into our activities array
               activities.forEach(act => {
                 if (savedStates[act.id] !== undefined) {
                   act.completed = savedStates[act.id];
@@ -67,7 +92,6 @@
           renderActivities();
         });
       } else {
-        // Fallback for local browser testing
         const saved = localStorage.getItem('user_activities');
         if (saved) {
           const savedStates = JSON.parse(saved);
@@ -81,9 +105,7 @@
       }
     }
 
-    // Save completed states back to Telegram Cloud
     function saveState() {
-      // Map activity IDs to their completion status { 1: true, 2: false, ... }
       const stateToSave = activities.reduce((acc, act) => {
         acc[act.id] = act.completed;
         return acc;
@@ -94,12 +116,9 @@
       if (tg.CloudStorage) {
         tg.CloudStorage.setItem('user_activities', dataString);
       }
-      
-      // Local storage fallback
       localStorage.setItem('user_activities', dataString);
     }
 
-    // Optional: Allow user to reset their progress for testing
     function resetProgress() {
       if (confirm('Уверены что хотите сбросить весь прогресс?')) {
         activities.forEach(act => act.completed = false);
@@ -123,20 +142,20 @@
         item.className = `p-4 rounded-2xl border flex justify-between items-center transition-all ${
           act.completed 
             ? 'border-green-500/30 bg-green-500/10' 
-            : 'border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm'
+            : 'border-tinkoff-border bg-tinkoff-card shadow-md'
         }`;
 
         item.innerHTML = `
-          <div>
-            <h3 class="font-semibold text-sm ${act.completed ? 'line-through opacity-60' : ''}">${act.title}</h3>
-            <span class="text-[10px] ${act.completed ? 'text-green-500 font-bold' : 'text-gray-400'}">
-              ${act.completed ? '✓ Verified' : 'Pending Verification'}
+          <div class="pr-2">
+            <h3 class="font-semibold text-sm ${act.completed ? 'line-through opacity-50' : 'text-white'}">${act.title}</h3>
+            <span class="text-[11px] ${act.completed ? 'text-green-400 font-medium' : 'text-tinkoff-muted'}">
+              ${act.completed ? ' Verified' : 'Pending verification'}
             </span>
           </div>
           ${
             act.completed
-              ? `<div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm">✓</div>`
-              : `<button onclick="startQrScanner(${act.id})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition-all active:scale-95">
+              ? `<div class="w-8 h-8 rounded-full bg-green-500 text-black flex items-center justify-center font-bold text-sm">✓</div>`
+              : `<button onclick="startQrScanner(${act.id})" class="px-4 py-2 bg-tinkoff-yellow hover:bg-tinkoff-yellowHover text-black text-xs font-bold rounded-xl shadow-md transition-all active:scale-95">
                   Scan QR
                  </button>`
           }
@@ -144,10 +163,10 @@
         listEl.appendChild(item);
       });
 
-      // Update progress bar
+      // Update progress bar & counter
       const percent = Math.round((completedCount / activities.length) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
-      document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Completed`;
+      document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Готово`;
     }
 
     // --- QR SCANNER LOGIC --- //
@@ -157,10 +176,10 @@
 
       if (tg.showScanQrPopup) {
         tg.showScanQrPopup({
-          text: 'Отсканьте QR'
+          text: 'Сканируйте QR'
         }, handleQrResult);
       } else {
-        alert('QR Scanner is not supported on this version of Telegram.');
+        alert('QR Scanner is not supported on this Telegram client.');
       }
     }
 
@@ -169,8 +188,6 @@
 
       if (activity && scannedText.trim() === activity.qrCode) {
         activity.completed = true;
-        
-        // Save state immediately upon completion
         saveState();
         renderActivities();
         
@@ -180,12 +197,11 @@
         return true; 
       } else {
         tg.HapticFeedback?.notificationOccurred('error');
-        tg.showAlert('❌ Неподходящий QR для активности');
+        tg.showAlert('❌ Неподходящий QR код для активности');
         return false;
       }
     }
 
-    // Start by loading saved state from CloudStorage
     loadSavedState();
   </script>
 </body>
