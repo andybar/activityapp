@@ -12,8 +12,8 @@
 <body class="bg-[var(--tg-theme-bg-color,#f3f4f6)] text-[var(--tg-theme-text-color,#111827)] p-4 min-h-screen">
 
   <header class="mb-6 text-center">
-    <h1 class="text-2xl font-bold text-blue-600">Activity Checklist</h1>
-    <p class="text-xs text-gray-500 mt-1">Scan the corresponding QR code to mark complete</p>
+    <h1 class="text-2xl font-bold text-blue-600">Чеклист Активностейt</h1>
+    <p class="text-xs text-gray-500 mt-1">Отсканируйте QR соответствующей активности что пометить ее выполненой</p>
     
     <!-- Progress Indicator -->
     <div class="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 max-w-xs mx-auto overflow-hidden">
@@ -21,14 +21,14 @@
     </div>
     <div class="flex justify-between items-center max-w-xs mx-auto mt-1 px-1">
       <span id="progress-text" class="text-xs font-semibold text-gray-500">0/3 Completed</span>
-      <button onclick="resetProgress()" class="text-[10px] text-red-500 hover:underline">Reset Progress</button>
+      <button onclick="resetProgress()" class="text-[10px] text-red-500 hover:underline">Сбросить прогресс</button>
     </div>
   </header>
 
   <!-- Activity List -->
   <div id="activity-list" class="space-y-3 max-w-md mx-auto">
     <!-- Loading skeleton until data is loaded -->
-    <div class="text-center text-sm text-gray-400 py-8">Loading activities...</div>
+    <div class="text-center text-sm text-gray-400 py-8">Грузим активности...</div>
   </div>
 
   <script>
@@ -38,9 +38,9 @@
 
     // Default Activities List
     let activities = [
-      { id: 1, title: 'Visit Welcome Booth', qrCode: 'booth_123', completed: false },
-      { id: 2, title: 'Attend Morning Keynote', qrCode: 'keynote_456', completed: false },
-      { id: 3, title: 'Complete Networking Challenge', qrCode: 'network_789', completed: false }
+      { id: 1, title: 'Покрасьте рот серебряной краской', qrCode: 'booth_123', completed: false },
+      { id: 2, title: 'Сгоняйте в Газтаун за бензаком', qrCode: 'keynote_456', completed: false },
+      { id: 3, title: 'Перетанцуйте ведущего', qrCode: 'network_789', completed: false }
     ];
 
     let currentActivityId = null;
@@ -101,7 +101,7 @@
 
     // Optional: Allow user to reset their progress for testing
     function resetProgress() {
-      if (confirm('Are you sure you want to reset all progress?')) {
+      if (confirm('Уверены что хотите сбросить весь прогресс?')) {
         activities.forEach(act => act.completed = false);
         saveState();
         renderActivities();
@@ -157,7 +157,7 @@
 
       if (tg.showScanQrPopup) {
         tg.showScanQrPopup({
-          text: 'Scan the official activity QR code'
+          text: 'Отсканьте QR'
         }, handleQrResult);
       } else {
         alert('QR Scanner is not supported on this version of Telegram.');
@@ -176,11 +176,11 @@
         
         tg.closeScanQrPopup();
         tg.HapticFeedback?.notificationOccurred('success');
-        tg.showAlert('🎉 Activity successfully completed!');
+        tg.showAlert('🎉 Активность выполнена!');
         return true; 
       } else {
         tg.HapticFeedback?.notificationOccurred('error');
-        tg.showAlert('❌ Invalid QR code for this activity. Try again!');
+        tg.showAlert('❌ Неподходящий QR для активности');
         return false;
       }
     }
