@@ -19,25 +19,96 @@
     <div class="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 max-w-xs mx-auto overflow-hidden">
       <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
     </div>
-    <span id="progress-text" class="text-xs font-semibold text-gray-500 mt-1 block">0/3 Completed</span>
+    <div class="flex justify-between items-center max-w-xs mx-auto mt-1 px-1">
+      <span id="progress-text" class="text-xs font-semibold text-gray-500">0/3 Completed</span>
+      <button onclick="resetProgress()" class="text-[10px] text-red-500 hover:underline">Reset Progress</button>
+    </div>
   </header>
 
   <!-- Activity List -->
-  <div id="activity-list" class="space-y-3 max-w-md mx-auto"></div>
+  <div id="activity-list" class="space-y-3 max-w-md mx-auto">
+    <!-- Loading skeleton until data is loaded -->
+    <div class="text-center text-sm text-gray-400 py-8">Loading activities...</div>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
-    tg.expand(); // Make Web App full-screen inside Telegram
+    tg.expand();
 
-    // Define activities and their target QR codes
-    const activities = [
+    // Default Activities List
+    let activities = [
       { id: 1, title: 'Visit Welcome Booth', qrCode: 'booth_123', completed: false },
       { id: 2, title: 'Attend Morning Keynote', qrCode: 'keynote_456', completed: false },
       { id: 3, title: 'Complete Networking Challenge', qrCode: 'network_789', completed: false }
     ];
 
     let currentActivityId = null;
+
+    // --- CLOUD STORAGE PERSISTENCE LOGIC --- //
+
+    // Load saved data on startup
+    function loadSavedState() {
+      if (tg.CloudStorage) {
+        tg.CloudStorage.getItem('user_activities', (err, value) => {
+          if (!err && value) {
+            try {
+              const savedStates = JSON.parse(value);
+              // Merge saved completed statuses into our activities array
+              activities.forEach(act => {
+                if (savedStates[act.id] !== undefined) {
+                  act.completed = savedStates[act.id];
+                }
+              });
+            } catch (e) {
+              console.error('Failed to parse CloudStorage data', e);
+            }
+          }
+          renderActivities();
+        });
+      } else {
+        // Fallback for local browser testing
+        const saved = localStorage.getItem('user_activities');
+        if (saved) {
+          const savedStates = JSON.parse(saved);
+          activities.forEach(act => {
+            if (savedStates[act.id] !== undefined) {
+              act.completed = savedStates[act.id];
+            }
+          });
+        }
+        renderActivities();
+      }
+    }
+
+    // Save completed states back to Telegram Cloud
+    function saveState() {
+      // Map activity IDs to their completion status { 1: true, 2: false, ... }
+      const stateToSave = activities.reduce((acc, act) => {
+        acc[act.id] = act.completed;
+        return acc;
+      }, {});
+
+      const dataString = JSON.stringify(stateToSave);
+
+      if (tg.CloudStorage) {
+        tg.CloudStorage.setItem('user_activities', dataString);
+      }
+      
+      // Local storage fallback
+      localStorage.setItem('user_activities', dataString);
+    }
+
+    // Optional: Allow user to reset their progress for testing
+    function resetProgress() {
+      if (confirm('Are you sure you want to reset all progress?')) {
+        activities.forEach(act => act.completed = false);
+        saveState();
+        renderActivities();
+      }
+    }
+
+    // --- RENDER & UI LOGIC --- //
 
     function renderActivities() {
       const listEl = document.getElementById('activity-list');
@@ -73,13 +144,14 @@
         listEl.appendChild(item);
       });
 
-      // Update progress
+      // Update progress bar
       const percent = Math.round((completedCount / activities.length) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
       document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Completed`;
     }
 
-    // Launch Telegram Native QR Camera
+    // --- QR SCANNER LOGIC --- //
+
     function startQrScanner(activityId) {
       currentActivityId = activityId;
 
@@ -92,13 +164,16 @@
       }
     }
 
-    // Process the QR result
     function handleQrResult(scannedText) {
       const activity = activities.find(a => a.id === currentActivityId);
 
       if (activity && scannedText.trim() === activity.qrCode) {
         activity.completed = true;
+        
+        // Save state immediately upon completion
+        saveState();
         renderActivities();
+        
         tg.closeScanQrPopup();
         tg.HapticFeedback?.notificationOccurred('success');
         tg.showAlert('🎉 Activity successfully completed!');
@@ -106,11 +181,12 @@
       } else {
         tg.HapticFeedback?.notificationOccurred('error');
         tg.showAlert('❌ Invalid QR code for this activity. Try again!');
-        return false; // Keep scanner open on fail
+        return false;
       }
     }
 
-    renderActivities();
+    // Start by loading saved state from CloudStorage
+    loadSavedState();
   </script>
 </body>
 </html>
