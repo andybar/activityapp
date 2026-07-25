@@ -27,6 +27,12 @@
       }
     }
   </script>
+  <style>
+    /* Smooth realistic spinning easing */
+    #wheel-canvas {
+      transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
+    }
+  </style>
 </head>
 <body class="bg-tinkoff-dark text-tinkoff-text p-4 min-h-screen font-sans antialiased selection:bg-tinkoff-yellow selection:text-black">
 
@@ -120,7 +126,7 @@
         <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-tinkoff-yellow drop-shadow-md"></div>
         
         <!-- Canvas Wheel -->
-        <canvas id="wheel-canvas" width="256" height="256" class="w-full h-full rounded-full border-4 border-tinkoff-border shadow-2xl transition-transform duration-[4000ms] ease-out"></canvas>
+        <canvas id="wheel-canvas" width="256" height="256" class="w-full h-full rounded-full border-4 border-tinkoff-border shadow-2xl"></canvas>
       </div>
 
       <!-- Action Button -->
@@ -385,19 +391,19 @@
     function drawWheel() {
       const canvas = document.getElementById('wheel-canvas');
       const ctx = canvas.getContext('2d');
-      const numPrizes = prizes.length;
-      const sliceAngle = (2 * Math.PI) / numPrizes;
-
-      const colors = ['#2A2A2D', '#38383C'];
-
       ctx.clearRect(0, 0, 256, 256);
 
-      for (let i = 0; i < numPrizes; i++) {
-        const startAngle = i * sliceAngle;
-        const endAngle = startAngle + sliceAngle;
+      // Colors: Winner (Dark Grey) vs No Prize (Charcoal)
+      const colors = ['#2A2A2D', '#1F1F22'];
+
+      // Sector 0: "Вы выиграли приз" (Left half 90 deg to 270 deg)
+      // Sector 1: "Приза нет но вы держитесь" (Right half 270 deg to 90 deg)
+      for (let i = 0; i < 2; i++) {
+        const startAngle = (i * Math.PI) + (Math.PI / 2);
+        const endAngle = startAngle + Math.PI;
 
         ctx.beginPath();
-        ctx.fillStyle = colors[i % colors.length];
+        ctx.fillStyle = colors[i];
         ctx.moveTo(128, 128);
         ctx.arc(128, 128, 128, startAngle, endAngle);
         ctx.fill();
@@ -406,24 +412,20 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Render text cleanly inside each 180° slice
         ctx.save();
         ctx.translate(128, 128);
-        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.rotate(startAngle + Math.PI / 2);
         ctx.textAlign = 'center';
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 10px sans-serif';
+        ctx.font = 'bold 11px sans-serif';
 
-        // Wrap text onto two lines if needed
-        const text = prizes[i];
-        if (text.length > 15) {
-          const mid = Math.floor(text.length / 2);
-          const spaceIdx = text.indexOf(' ', mid) !== -1 ? text.indexOf(' ', mid) : text.lastIndexOf(' ', mid);
-          const line1 = text.substring(0, spaceIdx);
-          const line2 = text.substring(spaceIdx + 1);
-          ctx.fillText(line1, 70, -4);
-          ctx.fillText(line2, 70, 8);
+        if (i === 0) {
+          ctx.fillText('Вы выиграли', 0, -60);
+          ctx.fillText('приз 🎉', 0, -45);
         } else {
-          ctx.fillText(text, 70, 3);
+          ctx.fillText('Приза нет,', 0, -60);
+          ctx.fillText('но вы держитесь 😅', 0, -45);
         }
 
         ctx.restore();
@@ -442,12 +444,12 @@
       const prizeIndex = Math.random() < 0.5 ? 0 : 1;
       wonPrize = prizes[prizeIndex];
 
-      const numPrizes = prizes.length;
-      const degreesPerSlice = 360 / numPrizes;
-
-      const targetDegree = 360 - (prizeIndex * degreesPerSlice) - (degreesPerSlice / 2);
-      const totalRotations = 360 * 5;
-      const finalRotation = totalRotations + targetDegree;
+      // Exact angle positioning under top pointer (12 o'clock = 270° or -90°)
+      // Index 0 ("Вы выиграли приз") mid-point is at 180° -> needs +90° rotation to top pointer
+      // Index 1 ("Приза нет...") mid-point is at 0° -> needs +270° rotation to top pointer
+      const targetBaseAngle = prizeIndex === 0 ? 90 : 270;
+      const fullRotations = 360 * 5; // 5 full turns
+      const finalRotation = fullRotations + targetBaseAngle;
 
       const canvas = document.getElementById('wheel-canvas');
       canvas.style.transform = `rotate(${finalRotation}deg)`;
