@@ -49,6 +49,17 @@
           <div id="progress-bar" class="bg-tinkoff-yellow h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
         </div>
       </div>
+
+      <!-- Banner unlocked when 100% complete -->
+      <div id="prize-unlock-banner" class="hidden mt-4 p-4 bg-gradient-to-r from-tinkoff-yellow to-amber-500 rounded-2xl text-black text-left shadow-lg cursor-pointer active:scale-98 transition-all" onclick="showPrizeScreen()">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase tracking-wider font-extrabold opacity-80 block">All Tasks Complete!</span>
+            <h3 class="font-black text-base">🎁 Roll for Your Prize Now</h3>
+          </div>
+          <div class="w-8 h-8 bg-black text-tinkoff-yellow rounded-full flex items-center justify-center font-bold text-lg">→</div>
+        </div>
+      </div>
     </header>
 
     <!-- Activity Cards Container -->
@@ -60,26 +71,57 @@
 
   <!-- ==================== TASK DETAIL SCREEN ==================== -->
   <div id="screen-detail" class="max-w-md mx-auto hidden">
-    <!-- Navigation Back Button (Fallback UI) -->
     <button onclick="showListScreen()" class="mb-4 inline-flex items-center text-xs text-tinkoff-muted hover:text-white transition">
       ← Back to Activities
     </button>
 
     <div class="bg-tinkoff-card border border-tinkoff-border rounded-3xl p-6 shadow-xl">
-      <!-- Badge -->
       <div id="detail-status-badge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-3 bg-tinkoff-yellow/20 text-tinkoff-yellow">
         Pending
       </div>
 
-      <!-- Task Header -->
       <h2 id="detail-title" class="text-xl font-bold text-white mb-2">Task Title</h2>
       <p id="detail-description" class="text-xs text-tinkoff-muted mb-6 leading-relaxed">
         Description of what the user needs to do to complete this activity.
       </p>
 
-      <!-- Verification Section / Action Button -->
       <div id="detail-action-area" class="space-y-3 pt-4 border-t border-tinkoff-border">
-        <!-- Button inserted dynamically -->
+        <!-- Action button dynamically rendered -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== PRIZE ROLL SCREEN ==================== -->
+  <div id="screen-prize" class="max-w-md mx-auto hidden text-center">
+    <button onclick="showListScreen()" class="mb-2 inline-flex items-center text-xs text-tinkoff-muted hover:text-white transition self-start">
+      ← Back to Activities
+    </button>
+
+    <div class="bg-tinkoff-card border border-tinkoff-border rounded-3xl p-6 shadow-xl relative overflow-hidden">
+      <span class="text-3xl block mb-1">🎉</span>
+      <h2 class="text-2xl font-black text-white">Prize Wheel</h2>
+      <p class="text-xs text-tinkoff-muted mt-1 mb-6">You've finished all activities! Spin to reveal your reward.</p>
+
+      <!-- Wheel Container -->
+      <div class="relative w-64 h-64 mx-auto mb-6">
+        <!-- Pointer Arrow -->
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-tinkoff-yellow drop-shadow-md"></div>
+        
+        <!-- Canvas Wheel -->
+        <canvas id="wheel-canvas" width="256" height="256" class="w-full h-full rounded-full border-4 border-tinkoff-border shadow-2xl transition-transform duration-[4000ms] ease-out"></canvas>
+      </div>
+
+      <!-- Action Button -->
+      <button id="spin-btn" onclick="spinWheel()" class="w-full py-4 bg-tinkoff-yellow hover:bg-tinkoff-yellowHover text-black text-sm font-black rounded-2xl shadow-lg transition-all active:scale-95">
+        SPIN THE WHEEL
+      </button>
+
+      <!-- Won Prize Container (Shown after spin) -->
+      <div id="prize-won-card" class="hidden mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl animate-fade-in">
+        <span class="text-xs text-green-400 font-bold block uppercase tracking-wider mb-1">Your Reward</span>
+        <h3 id="won-prize-name" class="text-xl font-extrabold text-white mb-2">1,000 Bonus Points</h3>
+        <p class="text-[11px] text-tinkoff-muted">Show this screen to the organizers at the info desk to claim your reward.</p>
       </div>
     </div>
   </div>
@@ -90,7 +132,6 @@
     tg.ready();
     tg.expand();
 
-    // Default Activities
     let activities = [
       { 
         id: 1, 
@@ -115,20 +156,34 @@
       }
     ];
 
+    const prizes = [
+      '1,000 Points', 
+      'T-Shirt Swag', 
+      'Free Coffee', 
+      '10% Cashback', 
+      'Tinkoff Sticker Pack', 
+      'VIP Pass'
+    ];
+
     let currentActivityId = null;
+    let wonPrize = null;
+    let isSpinning = false;
+    let currentWheelAngle = 0;
 
     // --- NAVIGATION LOGIC --- //
 
-    function showListScreen() {
+    function hideAllScreens() {
+      document.getElementById('screen-list').classList.add('hidden');
       document.getElementById('screen-detail').classList.add('hidden');
+      document.getElementById('screen-prize').classList.add('hidden');
+    }
+
+    function showListScreen() {
+      hideAllScreens();
       document.getElementById('screen-list').classList.remove('hidden');
       currentActivityId = null;
 
-      // Hide Telegram Native Back Button
-      if (tg.BackButton) {
-        tg.BackButton.hide();
-      }
-
+      if (tg.BackButton) tg.BackButton.hide();
       renderActivities();
     }
 
@@ -137,7 +192,6 @@
       const activity = activities.find(a => a.id === activityId);
       if (!activity) return;
 
-      // Render details
       document.getElementById('detail-title').innerText = activity.title;
       document.getElementById('detail-description').innerText = activity.description;
 
@@ -167,60 +221,174 @@
         `;
       }
 
-      // Switch screens
-      document.getElementById('screen-list').classList.add('hidden');
+      hideAllScreens();
       document.getElementById('screen-detail').classList.remove('hidden');
 
-      // Setup Telegram Native Back Button
       if (tg.BackButton) {
         tg.BackButton.show();
         tg.BackButton.onClick(showListScreen);
       }
     }
 
-    // --- RENDER & STORAGE LOGIC --- //
+    function showPrizeScreen() {
+      hideAllScreens();
+      document.getElementById('screen-prize').classList.remove('hidden');
+
+      if (tg.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(showListScreen);
+      }
+
+      drawWheel();
+
+      // If user has already spun, restore state
+      if (wonPrize) {
+        document.getElementById('spin-btn').classList.add('hidden');
+        document.getElementById('won-prize-name').innerText = wonPrize;
+        document.getElementById('prize-won-card').classList.remove('hidden');
+      }
+    }
+
+    // --- PRIZE WHEEL CANVAS RENDERER --- //
+
+    function drawWheel() {
+      const canvas = document.getElementById('wheel-canvas');
+      const ctx = canvas.getContext('2d');
+      const numPrizes = prizes.length;
+      const sliceAngle = (2 * Math.PI) / numPrizes;
+
+      const colors = ['#2A2A2D', '#1F1F22', '#38383C', '#222225', '#2E2E32', '#1B1B1E'];
+
+      ctx.clearRect(0, 0, 256, 256);
+
+      for (let i = 0; i < numPrizes; i++) {
+        const startAngle = i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.moveTo(128, 128);
+        ctx.arc(128, 128, 128, startAngle, endAngle);
+        ctx.fill();
+
+        // Slice dividing lines
+        ctx.strokeStyle = '#FFDD2D';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Text Labels
+        ctx.save();
+        ctx.translate(128, 128);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText(prizes[i], 115, 4);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      if (isSpinning || wonPrize) return;
+      isSpinning = true;
+
+      const spinBtn = document.getElementById('spin-btn');
+      spinBtn.disabled = true;
+      spinBtn.innerText = 'SPINNING...';
+
+      // Pick random winning prize
+      const prizeIndex = Math.floor(Math.random() * prizes.length);
+      wonPrize = prizes[prizeIndex];
+
+      const numPrizes = prizes.length;
+      const degreesPerSlice = 360 / numPrizes;
+
+      // Calculate degrees needed to land target slice under top pointer (270deg offset)
+      const targetDegree = 360 - (prizeIndex * degreesPerSlice) - (degreesPerSlice / 2);
+      const totalRotations = 360 * 5; // 5 full spins
+      const finalRotation = totalRotations + targetDegree;
+
+      const canvas = document.getElementById('wheel-canvas');
+      canvas.style.transform = `rotate(${finalRotation}deg)`;
+
+      // Pulse haptics during spin
+      let interval = setInterval(() => {
+        tg.HapticFeedback?.impactOccurred('light');
+      }, 300);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        isSpinning = false;
+
+        tg.HapticFeedback?.notificationOccurred('success');
+        spinBtn.classList.add('hidden');
+
+        document.getElementById('won-prize-name').innerText = wonPrize;
+        document.getElementById('prize-won-card').classList.remove('hidden');
+
+        saveState();
+      }, 4000);
+    }
+
+    // --- DATA & STORAGE LOGIC --- //
 
     function loadSavedState() {
-      if (tg.CloudStorage) {
-        tg.CloudStorage.getItem('user_activities', (err, value) => {
-          if (!err && value) {
-            try {
-              const savedStates = JSON.parse(value);
-              activities.forEach(act => {
-                if (savedStates[act.id] !== undefined) act.completed = savedStates[act.id];
-              });
-            } catch (e) {}
+      const parseData = (value) => {
+        if (!value) return;
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed.activities) {
+            activities.forEach(act => {
+              if (parsed.activities[act.id] !== undefined) act.completed = parsed.activities[act.id];
+            });
           }
+          if (parsed.wonPrize) {
+            wonPrize = parsed.wonPrize;
+          }
+        } catch (e) {}
+      };
+
+      if (tg.CloudStorage) {
+        tg.CloudStorage.getItem('user_app_data', (err, value) => {
+          if (!err) parseData(value);
           renderActivities();
         });
       } else {
-        const saved = localStorage.getItem('user_activities');
-        if (saved) {
-          const savedStates = JSON.parse(saved);
-          activities.forEach(act => {
-            if (savedStates[act.id] !== undefined) act.completed = savedStates[act.id];
-          });
-        }
+        parseData(localStorage.getItem('user_app_data'));
         renderActivities();
       }
     }
 
     function saveState() {
-      const stateToSave = activities.reduce((acc, act) => {
-        acc[act.id] = act.completed;
-        return acc;
-      }, {});
+      const stateToSave = {
+        activities: activities.reduce((acc, act) => {
+          acc[act.id] = act.completed;
+          return acc;
+        }, {}),
+        wonPrize: wonPrize
+      };
 
       const dataString = JSON.stringify(stateToSave);
-      if (tg.CloudStorage) tg.CloudStorage.setItem('user_activities', dataString);
-      localStorage.setItem('user_activities', dataString);
+      if (tg.CloudStorage) tg.CloudStorage.setItem('user_app_data', dataString);
+      localStorage.setItem('user_app_data', dataString);
     }
 
     function resetProgress() {
-      if (confirm('Are you sure you want to reset all progress?')) {
+      if (confirm('Are you sure you want to reset all tasks and prize rolls?')) {
         activities.forEach(act => act.completed = false);
+        wonPrize = null;
         saveState();
-        renderActivities();
+        
+        // Reset wheel rotation
+        const canvas = document.getElementById('wheel-canvas');
+        if (canvas) canvas.style.transform = 'rotate(0deg)';
+        
+        document.getElementById('spin-btn').classList.remove('hidden');
+        document.getElementById('spin-btn').innerText = 'SPIN THE WHEEL';
+        document.getElementById('spin-btn').disabled = false;
+        document.getElementById('prize-won-card').classList.add('hidden');
+
+        showListScreen();
       }
     }
 
@@ -259,6 +427,14 @@
       const percent = Math.round((completedCount / activities.length) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
       document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Completed`;
+
+      // Show/Hide unlock prize banner
+      const banner = document.getElementById('prize-unlock-banner');
+      if (completedCount === activities.length) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
     }
 
     // --- QR SCANNER LOGIC --- //
@@ -286,8 +462,16 @@
         tg.HapticFeedback?.notificationOccurred('success');
         tg.showAlert('🎉 Task Verified!');
         
-        // Refresh the detail screen UI to show success
         showDetailScreen(currentActivityId);
+        
+        // Auto-navigate to prize screen if all tasks are now complete
+        const allDone = activities.every(a => a.completed);
+        if (allDone) {
+          setTimeout(() => {
+            showPrizeScreen();
+          }, 1200);
+        }
+
         return true; 
       } else {
         tg.HapticFeedback?.notificationOccurred('error');
