@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Activity Checklist</title>
+  <title>Квест Выжившего</title>
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Tailwind CSS -->
@@ -36,14 +36,14 @@
       <div class="inline-flex items-center justify-center w-12 h-12 bg-tinkoff-yellow text-black font-extrabold text-2xl rounded-2xl mb-3 shadow-lg shadow-tinkoff-yellow/10">
         T
       </div>
-      <h1 class="text-2xl font-bold tracking-tight text-white">Activities</h1>
-      <p class="text-xs text-tinkoff-muted mt-1">Select a task to view details and verify</p>
+      <h1 class="text-2xl font-bold tracking-tight text-white">Квест Выжившего</h1>
+      <p class="text-xs text-tinkoff-muted mt-1">Выполняй задания и сканируй QR-коды локаций</p>
       
       <!-- Progress Indicator -->
       <div class="mt-5 bg-tinkoff-card border border-tinkoff-border rounded-2xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-2">
-          <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/3 Completed</span>
-          <button onclick="resetProgress()" class="text-xs text-tinkoff-yellow hover:underline font-medium">Reset</button>
+          <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/6 Выполнено</span>
+          <button onclick="resetProgress()" class="text-xs text-tinkoff-yellow hover:underline font-medium">Сброс</button>
         </div>
         <div class="bg-tinkoff-dark rounded-full h-2 overflow-hidden">
           <div id="progress-bar" class="bg-tinkoff-yellow h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -54,8 +54,8 @@
       <div id="prize-unlock-banner" class="hidden mt-4 p-4 bg-gradient-to-r from-tinkoff-yellow to-amber-500 rounded-2xl text-black text-left shadow-lg cursor-pointer active:scale-98 transition-all" onclick="showPrizeScreen()">
         <div class="flex items-center justify-between">
           <div>
-            <span class="text-[10px] uppercase tracking-wider font-extrabold opacity-80 block">All Tasks Complete!</span>
-            <h3 class="font-black text-base">🎁 Roll for Your Prize Now</h3>
+            <span class="text-[10px] uppercase tracking-wider font-extrabold opacity-80 block">Все задания пройдены!</span>
+            <h3 class="font-black text-base">🎁 Испытай удачу в рулетке</h3>
           </div>
           <div class="w-8 h-8 bg-black text-tinkoff-yellow rounded-full flex items-center justify-center font-bold text-lg">→</div>
         </div>
@@ -64,7 +64,7 @@
 
     <!-- Activity Cards Container -->
     <div id="activity-list" class="space-y-3">
-      <div class="text-center text-xs text-tinkoff-muted py-8">Loading tasks...</div>
+      <div class="text-center text-xs text-tinkoff-muted py-8">Загрузка заданий...</div>
     </div>
   </div>
 
@@ -72,17 +72,18 @@
   <!-- ==================== TASK DETAIL SCREEN ==================== -->
   <div id="screen-detail" class="max-w-md mx-auto hidden">
     <button onclick="showListScreen()" class="mb-4 inline-flex items-center text-xs text-tinkoff-muted hover:text-white transition">
-      ← Back to Activities
+      ← Назад к заданиям
     </button>
 
     <div class="bg-tinkoff-card border border-tinkoff-border rounded-3xl p-6 shadow-xl">
       <div id="detail-status-badge" class="inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-3 bg-tinkoff-yellow/20 text-tinkoff-yellow">
-        Pending
+        Ожидает выполнения
       </div>
 
-      <h2 id="detail-title" class="text-xl font-bold text-white mb-2">Task Title</h2>
+      <div id="detail-category" class="text-xs font-bold text-tinkoff-yellow uppercase tracking-wider mb-1">Категория</div>
+      <h2 id="detail-title" class="text-xl font-bold text-white mb-3">Заголовок</h2>
       <p id="detail-description" class="text-xs text-tinkoff-muted mb-6 leading-relaxed">
-        Description of what the user needs to do to complete this activity.
+        Описание того, что нужно сделать на локации.
       </p>
 
       <div id="detail-action-area" class="space-y-3 pt-4 border-t border-tinkoff-border">
@@ -95,13 +96,13 @@
   <!-- ==================== PRIZE ROLL SCREEN ==================== -->
   <div id="screen-prize" class="max-w-md mx-auto hidden text-center">
     <button onclick="showListScreen()" class="mb-2 inline-flex items-center text-xs text-tinkoff-muted hover:text-white transition self-start">
-      ← Back to Activities
+      ← Назад к заданиям
     </button>
 
     <div class="bg-tinkoff-card border border-tinkoff-border rounded-3xl p-6 shadow-xl relative overflow-hidden">
       <span class="text-3xl block mb-1">🎉</span>
-      <h2 class="text-2xl font-black text-white">Prize Wheel</h2>
-      <p class="text-xs text-tinkoff-muted mt-1 mb-6">You've finished all activities! Spin to reveal your reward.</p>
+      <h2 class="text-2xl font-black text-white">Колесо Призов</h2>
+      <p class="text-xs text-tinkoff-muted mt-1 mb-6">Все задания пройдены! Крути колесо и забирай свою награду.</p>
 
       <!-- Wheel Container -->
       <div class="relative w-64 h-64 mx-auto mb-6">
@@ -114,14 +115,14 @@
 
       <!-- Action Button -->
       <button id="spin-btn" onclick="spinWheel()" class="w-full py-4 bg-tinkoff-yellow hover:bg-tinkoff-yellowHover text-black text-sm font-black rounded-2xl shadow-lg transition-all active:scale-95">
-        SPIN THE WHEEL
+        КРУТИТЬ КОЛЕСО
       </button>
 
-      <!-- Won Prize Container (Shown after spin) -->
+      <!-- Won Prize Container -->
       <div id="prize-won-card" class="hidden mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl animate-fade-in">
-        <span class="text-xs text-green-400 font-bold block uppercase tracking-wider mb-1">Your Reward</span>
-        <h3 id="won-prize-name" class="text-xl font-extrabold text-white mb-2">1,000 Bonus Points</h3>
-        <p class="text-[11px] text-tinkoff-muted">Show this screen to the organizers at the info desk to claim your reward.</p>
+        <span class="text-xs text-green-400 font-bold block uppercase tracking-wider mb-1">Твой Приз</span>
+        <h3 id="won-prize-name" class="text-xl font-extrabold text-white mb-2">Фирменный Мерч</h3>
+        <p class="text-[11px] text-tinkoff-muted">Покажи этот экран организаторам на инфостойке для получения приза.</p>
       </div>
     </div>
   </div>
@@ -132,43 +133,70 @@
     tg.ready();
     tg.expand();
 
+    // 6 Tasks Configuration
     let activities = [
       { 
         id: 1, 
-        title: 'Visit Welcome Booth', 
-        description: 'Find the main reception desk at the entrance, meet the organizers, and scan their official QR code.',
-        qrCode: 'booth_123', 
+        category: 'Фотозона',
+        title: 'Сделай снимок выжившего', 
+        description: 'Найди тематическую фотозону, сделай атмосферный кадр и отсканируй QR-код у инструктора.',
+        qrCode: 'photo_zone_1', 
         completed: false 
       },
       { 
         id: 2, 
-        title: 'Attend Morning Keynote', 
-        description: 'Join the main stage presentation at 10:00 AM. Scan the QR code displayed on the side banner.',
-        qrCode: 'keynote_456', 
+        category: 'Just Dance',
+        title: 'Перехвати радиосигнал движением', 
+        description: 'Повтори танцевальные движения на площадке Just Dance и поймай радиоволну.',
+        qrCode: 'just_dance_2', 
         completed: false 
       },
       { 
         id: 3, 
-        title: 'Complete Networking Challenge', 
-        description: 'Connect with 3 fellow attendees, share contacts, and scan the networking wall QR code.',
-        qrCode: 'network_789', 
+        category: 'Тир',
+        title: 'Проверь меткость в тире', 
+        description: 'Отправься в тир, порази мишени и докажи свою точность в условиях пустоши.',
+        qrCode: 'shooting_range_3', 
+        completed: false 
+      },
+      { 
+        id: 4, 
+        category: 'Арена',
+        title: 'Вступи в дуэль на арене', 
+        description: 'Выйди на арену и сразись с соперником в честном поединке.',
+        qrCode: 'arena_duel_4', 
+        completed: false 
+      },
+      { 
+        id: 5, 
+        category: 'Макияж',
+        title: 'Нанеси знак своей фракции', 
+        description: 'Посети гримерный пункт и нанеси боевой грим или символ своей фракции.',
+        qrCode: 'makeup_faction_5', 
+        completed: false 
+      },
+      { 
+        id: 6, 
+        category: 'Творчество',
+        title: 'Собери элемент походной экипировки', 
+        description: 'Загляни в крафт-зону и своими руками собери полезный элемент снаряжения.',
+        qrCode: 'craft_gear_6', 
         completed: false 
       }
     ];
 
     const prizes = [
-      '1,000 Points', 
-      'T-Shirt Swag', 
-      'Free Coffee', 
-      '10% Cashback', 
-      'Tinkoff Sticker Pack', 
-      'VIP Pass'
+      'Фирменный Мерч', 
+      '1,000 Бонусов', 
+      'Набор Выжившего', 
+      'Стикерпак', 
+      'Термокружка', 
+      'Секретный Приз'
     ];
 
     let currentActivityId = null;
     let wonPrize = null;
     let isSpinning = false;
-    let currentWheelAngle = 0;
 
     // --- NAVIGATION LOGIC --- //
 
@@ -192,6 +220,7 @@
       const activity = activities.find(a => a.id === activityId);
       if (!activity) return;
 
+      document.getElementById('detail-category').innerText = activity.category;
       document.getElementById('detail-title').innerText = activity.title;
       document.getElementById('detail-description').innerText = activity.description;
 
@@ -200,23 +229,23 @@
 
       if (activity.completed) {
         badge.className = "inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-3 bg-green-500/20 text-green-400";
-        badge.innerText = "✓ Task Completed";
+        badge.innerText = "✓ Задание Выполнено";
 
         actionArea.innerHTML = `
           <div class="p-4 bg-green-500/10 border border-green-500/30 rounded-2xl text-center">
             <div class="w-10 h-10 bg-green-500 text-black rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-2">✓</div>
-            <p class="text-xs font-semibold text-green-400">Activity Verified!</p>
-            <p class="text-[10px] text-tinkoff-muted mt-1">You have successfully completed this task.</p>
+            <p class="text-xs font-semibold text-green-400">Проверено!</p>
+            <p class="text-[10px] text-tinkoff-muted mt-1">Вы успешно прошли эту локацию.</p>
           </div>
         `;
       } else {
         badge.className = "inline-block px-3 py-1 rounded-full text-[10px] font-bold mb-3 bg-tinkoff-yellow/20 text-tinkoff-yellow";
-        badge.innerText = "Verification Required";
+        badge.innerText = "Требуется Проверка";
 
         actionArea.innerHTML = `
           <button onclick="startQrScanner()" class="w-full py-3.5 bg-tinkoff-yellow hover:bg-tinkoff-yellowHover text-black text-xs font-bold rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-            Scan QR Code
+            Сканировать QR-код
           </button>
         `;
       }
@@ -241,7 +270,6 @@
 
       drawWheel();
 
-      // If user has already spun, restore state
       if (wonPrize) {
         document.getElementById('spin-btn').classList.add('hidden');
         document.getElementById('won-prize-name').innerText = wonPrize;
@@ -271,19 +299,17 @@
         ctx.arc(128, 128, 128, startAngle, endAngle);
         ctx.fill();
 
-        // Slice dividing lines
         ctx.strokeStyle = '#FFDD2D';
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Text Labels
         ctx.save();
         ctx.translate(128, 128);
         ctx.rotate(startAngle + sliceAngle / 2);
         ctx.textAlign = 'right';
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 10px sans-serif';
-        ctx.fillText(prizes[i], 115, 4);
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillText(prizes[i], 115, 3);
         ctx.restore();
       }
     }
@@ -294,24 +320,21 @@
 
       const spinBtn = document.getElementById('spin-btn');
       spinBtn.disabled = true;
-      spinBtn.innerText = 'SPINNING...';
+      spinBtn.innerText = 'ВРАЩЕНИЕ...';
 
-      // Pick random winning prize
       const prizeIndex = Math.floor(Math.random() * prizes.length);
       wonPrize = prizes[prizeIndex];
 
       const numPrizes = prizes.length;
       const degreesPerSlice = 360 / numPrizes;
 
-      // Calculate degrees needed to land target slice under top pointer (270deg offset)
       const targetDegree = 360 - (prizeIndex * degreesPerSlice) - (degreesPerSlice / 2);
-      const totalRotations = 360 * 5; // 5 full spins
+      const totalRotations = 360 * 5;
       const finalRotation = totalRotations + targetDegree;
 
       const canvas = document.getElementById('wheel-canvas');
       canvas.style.transform = `rotate(${finalRotation}deg)`;
 
-      // Pulse haptics during spin
       let interval = setInterval(() => {
         tg.HapticFeedback?.impactOccurred('light');
       }, 300);
@@ -374,17 +397,16 @@
     }
 
     function resetProgress() {
-      if (confirm('Are you sure you want to reset all tasks and prize rolls?')) {
+      if (confirm('Сбросить весь прогресс и выигранные призы?')) {
         activities.forEach(act => act.completed = false);
         wonPrize = null;
         saveState();
         
-        // Reset wheel rotation
         const canvas = document.getElementById('wheel-canvas');
         if (canvas) canvas.style.transform = 'rotate(0deg)';
         
         document.getElementById('spin-btn').classList.remove('hidden');
-        document.getElementById('spin-btn').innerText = 'SPIN THE WHEEL';
+        document.getElementById('spin-btn').innerText = 'КРУТИТЬ КОЛЕСО';
         document.getElementById('spin-btn').disabled = false;
         document.getElementById('prize-won-card').classList.add('hidden');
 
@@ -410,9 +432,10 @@
 
         item.innerHTML = `
           <div class="pr-2">
+            <span class="text-[10px] font-bold text-tinkoff-yellow uppercase tracking-wider block mb-0.5">${act.category}</span>
             <h3 class="font-semibold text-sm ${act.completed ? 'line-through opacity-50' : 'text-white'}">${act.title}</h3>
             <span class="text-[11px] ${act.completed ? 'text-green-400 font-medium' : 'text-tinkoff-muted'}">
-              ${act.completed ? '✓ Verified' : 'Tap to view task'}
+              ${act.completed ? '✓ Выполнено' : 'Нажми для перехода'}
             </span>
           </div>
           ${
@@ -426,9 +449,8 @@
 
       const percent = Math.round((completedCount / activities.length) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
-      document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Completed`;
+      document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Выполнено`;
 
-      // Show/Hide unlock prize banner
       const banner = document.getElementById('prize-unlock-banner');
       if (completedCount === activities.length) {
         banner.classList.remove('hidden');
@@ -444,10 +466,10 @@
 
       if (tg.showScanQrPopup) {
         tg.showScanQrPopup({
-          text: 'Align the activity QR code in the frame'
+          text: 'Наведите камеру на QR-код локации'
         }, handleQrResult);
       } else {
-        alert('QR Scanner is not supported on this Telegram client.');
+        alert('Сканер QR-кодов не поддерживается в этом клиенте.');
       }
     }
 
@@ -460,11 +482,10 @@
         
         tg.closeScanQrPopup();
         tg.HapticFeedback?.notificationOccurred('success');
-        tg.showAlert('🎉 Task Verified!');
+        tg.showAlert('🎉 Задание выполнено!');
         
         showDetailScreen(currentActivityId);
         
-        // Auto-navigate to prize screen if all tasks are now complete
         const allDone = activities.every(a => a.completed);
         if (allDone) {
           setTimeout(() => {
@@ -475,7 +496,7 @@
         return true; 
       } else {
         tg.HapticFeedback?.notificationOccurred('error');
-        tg.showAlert('❌ Invalid QR code for this task. Try again!');
+        tg.showAlert('❌ Неверный QR-код для этой локации!');
         return false;
       }
     }
