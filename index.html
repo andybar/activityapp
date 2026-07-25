@@ -32,17 +32,17 @@
 
   <!-- ==================== MAIN LIST SCREEN ==================== -->
   <div id="screen-list" class="max-w-md mx-auto">
-    <header class="mb-6 text-center pt-2">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-tinkoff-yellow text-black font-extrabold text-2xl rounded-2xl mb-3 shadow-lg shadow-tinkoff-yellow/10">
+    <header class="mb-4 text-center pt-2">
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-tinkoff-yellow text-black font-extrabold text-2xl rounded-2xl mb-2 shadow-lg shadow-tinkoff-yellow/10">
         T
       </div>
       <h1 class="text-2xl font-bold tracking-tight text-white">Квест Выжившего</h1>
-      <p class="text-xs text-tinkoff-muted mt-1">Выполняй задания и сканируй QR-коды локаций</p>
+      <p class="text-xs text-tinkoff-muted mt-0.5">Выполняй задания локаций и раздела Т-Город</p>
       
-      <!-- Progress Indicator -->
-      <div class="mt-5 bg-tinkoff-card border border-tinkoff-border rounded-2xl p-4 shadow-sm">
+      <!-- Overall Progress Indicator -->
+      <div class="mt-4 bg-tinkoff-card border border-tinkoff-border rounded-2xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-2">
-          <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/6 Выполнено</span>
+          <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/10 Выполнено</span>
           <button onclick="resetProgress()" class="text-xs text-tinkoff-yellow hover:underline font-medium">Сброс</button>
         </div>
         <div class="bg-tinkoff-dark rounded-full h-2 overflow-hidden">
@@ -59,6 +59,16 @@
           </div>
           <div class="w-8 h-8 bg-black text-tinkoff-yellow rounded-full flex items-center justify-center font-bold text-lg">→</div>
         </div>
+      </div>
+
+      <!-- GROUP TABS SWITCHER -->
+      <div class="flex bg-tinkoff-card border border-tinkoff-border p-1 rounded-2xl mt-4">
+        <button id="tab-group-1" onclick="switchGroup(1)" class="flex-1 py-2 text-xs font-bold rounded-xl transition-all bg-tinkoff-yellow text-black shadow">
+          Группа 1 (Локации)
+        </button>
+        <button id="tab-group-2" onclick="switchGroup(2)" class="flex-1 py-2 text-xs font-bold rounded-xl transition-all text-tinkoff-muted hover:text-white">
+          Группа 2 (Т-Город)
+        </button>
       </div>
     </header>
 
@@ -133,54 +143,109 @@
     tg.ready();
     tg.expand();
 
-    // 6 Tasks Configuration
+    // Combined Activities (Group 1 + Group 2)
     let activities = [
+      // GROUP 1: EVENT LOCATIONS
       { 
         id: 1, 
+        group: 1,
         category: 'Фотозона',
         title: 'Сделай снимок выжившего', 
         description: 'Найди тематическую фотозону, сделай атмосферный кадр и отсканируй QR-код у инструктора.',
+        afterText: 'Снимок сделан',
         qrCode: 'photo_zone_1', 
         completed: false 
       },
       { 
         id: 2, 
+        group: 1,
         category: 'Just Dance',
         title: 'Перехвати радиосигнал движением', 
         description: 'Повтори танцевальные движения на площадке Just Dance и поймай радиоволну.',
+        afterText: 'Радиосигнал перехвачен',
         qrCode: 'just_dance_2', 
         completed: false 
       },
       { 
         id: 3, 
+        group: 1,
         category: 'Тир',
         title: 'Проверь меткость в тире', 
         description: 'Отправься в тир, порази мишени и докажи свою точность в условиях пустоши.',
+        afterText: 'Меткость проверена',
         qrCode: 'shooting_range_3', 
         completed: false 
       },
       { 
         id: 4, 
+        group: 1,
         category: 'Арена',
         title: 'Вступи в дуэль на арене', 
         description: 'Выйди на арену и сразись с соперником в честном поединке.',
+        afterText: 'Дуэль завершена',
         qrCode: 'arena_duel_4', 
         completed: false 
       },
       { 
         id: 5, 
+        group: 1,
         category: 'Макияж',
         title: 'Нанеси знак своей фракции', 
         description: 'Посети гримерный пункт и нанеси боевой грим или символ своей фракции.',
+        afterText: 'Знак фракции нанесен',
         qrCode: 'makeup_faction_5', 
         completed: false 
       },
       { 
         id: 6, 
+        group: 1,
         category: 'Творчество',
         title: 'Собери элемент походной экипировки', 
         description: 'Загляни в крафт-зону и своими руками собери полезный элемент снаряжения.',
+        afterText: 'Элемент экипировки собран',
         qrCode: 'craft_gear_6', 
+        completed: false 
+      },
+
+      // GROUP 2: T-CITY APP TASKS
+      { 
+        id: 7, 
+        group: 2,
+        category: 'Путешествия',
+        title: 'Наметь маршрут будущей экспедиции', 
+        description: 'Открой в Т-Городе раздел «Путешествия» и сохрани авиамаршрут, отель или тур, куда хотел бы отправиться до конца года.',
+        afterText: 'Маршрут экспедиции проложен',
+        qrCode: 'travel_route_7', 
+        completed: false 
+      },
+      { 
+        id: 8, 
+        group: 2,
+        category: 'Афиша',
+        title: 'Выбери событие для вылазки', 
+        description: 'Открой в Т-Городе раздел «Афиша» и сохрани фильм, спектакль или концерт, который хотел бы посетить до конца года.',
+        afterText: 'Культурная вылазка запланирована',
+        qrCode: 'afisha_event_8', 
+        completed: false 
+      },
+      { 
+        id: 9, 
+        group: 2,
+        category: 'Топливо',
+        title: 'Отметь заправку на маршруте', 
+        description: 'Открой в Т-Городе раздел «Топливо» и сохрани удобную заправку на одном из своих обычных маршрутов.',
+        afterText: 'Точка заправки отмечена',
+        qrCode: 'fuel_station_9', 
+        completed: false 
+      },
+      { 
+        id: 10, 
+        group: 2,
+        category: 'Супермаркеты',
+        title: 'Собери запас любимых продуктов', 
+        description: 'Открой в Т-Городе раздел «Супермаркеты», выбери магазин и добавь в корзину два-три любимых товара.',
+        afterText: 'Запас продуктов собран',
+        qrCode: 'supermarket_supplies_10', 
         completed: false 
       }
     ];
@@ -194,9 +259,29 @@
       'Секретный Приз'
     ];
 
+    let currentGroup = 1;
     let currentActivityId = null;
     let wonPrize = null;
     let isSpinning = false;
+
+    // --- TAB SWITCHER LOGIC --- //
+
+    function switchGroup(groupNum) {
+      currentGroup = groupNum;
+
+      const btn1 = document.getElementById('tab-group-1');
+      const btn2 = document.getElementById('tab-group-2');
+
+      if (groupNum === 1) {
+        btn1.className = "flex-1 py-2 text-xs font-bold rounded-xl transition-all bg-tinkoff-yellow text-black shadow";
+        btn2.className = "flex-1 py-2 text-xs font-bold rounded-xl transition-all text-tinkoff-muted hover:text-white";
+      } else {
+        btn2.className = "flex-1 py-2 text-xs font-bold rounded-xl transition-all bg-tinkoff-yellow text-black shadow";
+        btn1.className = "flex-1 py-2 text-xs font-bold rounded-xl transition-all text-tinkoff-muted hover:text-white";
+      }
+
+      renderActivities();
+    }
 
     // --- NAVIGATION LOGIC --- //
 
@@ -234,8 +319,8 @@
         actionArea.innerHTML = `
           <div class="p-4 bg-green-500/10 border border-green-500/30 rounded-2xl text-center">
             <div class="w-10 h-10 bg-green-500 text-black rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-2">✓</div>
-            <p class="text-xs font-semibold text-green-400">Проверено!</p>
-            <p class="text-[10px] text-tinkoff-muted mt-1">Вы успешно прошли эту локацию.</p>
+            <p class="text-xs font-semibold text-green-400">${activity.afterText || 'Проверено!'}</p>
+            <p class="text-[10px] text-tinkoff-muted mt-1">Вы успешно прошли этот этап.</p>
           </div>
         `;
       } else {
@@ -417,11 +502,14 @@
     function renderActivities() {
       const listEl = document.getElementById('activity-list');
       listEl.innerHTML = '';
+      
       let completedCount = 0;
+      activities.forEach(a => { if (a.completed) completedCount++; });
 
-      activities.forEach(act => {
-        if (act.completed) completedCount++;
+      // Filter activities based on active tab
+      const currentTasks = activities.filter(act => act.group === currentGroup);
 
+      currentTasks.forEach(act => {
         const item = document.createElement('div');
         item.onclick = () => showDetailScreen(act.id);
         item.className = `p-4 rounded-2xl border flex justify-between items-center transition-all cursor-pointer active:scale-[0.98] ${
@@ -435,7 +523,7 @@
             <span class="text-[10px] font-bold text-tinkoff-yellow uppercase tracking-wider block mb-0.5">${act.category}</span>
             <h3 class="font-semibold text-sm ${act.completed ? 'line-through opacity-50' : 'text-white'}">${act.title}</h3>
             <span class="text-[11px] ${act.completed ? 'text-green-400 font-medium' : 'text-tinkoff-muted'}">
-              ${act.completed ? '✓ Выполнено' : 'Нажми для перехода'}
+              ${act.completed ? `✓ ${act.afterText}` : 'Нажми для перехода'}
             </span>
           </div>
           ${
@@ -447,10 +535,12 @@
         listEl.appendChild(item);
       });
 
+      // Overall Progress Update
       const percent = Math.round((completedCount / activities.length) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
       document.getElementById('progress-text').innerText = `${completedCount}/${activities.length} Выполнено`;
 
+      // Show/Hide Prize Wheel Banner
       const banner = document.getElementById('prize-unlock-banner');
       if (completedCount === activities.length) {
         banner.classList.remove('hidden');
