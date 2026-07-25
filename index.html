@@ -110,9 +110,9 @@
     </button>
 
     <div class="bg-tinkoff-card border border-tinkoff-border rounded-3xl p-6 shadow-xl relative overflow-hidden">
-      <span class="text-3xl block mb-1">🎉</span>
-      <h2 class="text-2xl font-black text-white">Колесо Призов</h2>
-      <p class="text-xs text-tinkoff-muted mt-1 mb-6">Ты выполнил достаточно заданий! Крути колесо и забирай свою награду.</p>
+      <span class="text-3xl block mb-1">🎰</span>
+      <h2 class="text-2xl font-black text-white">Рулетка Выжившего</h2>
+      <p class="text-xs text-tinkoff-muted mt-1 mb-6">Ты выполнил достаточно заданий! Испытай свою удачу.</p>
 
       <!-- Wheel Container -->
       <div class="relative w-64 h-64 mx-auto mb-6">
@@ -125,14 +125,14 @@
 
       <!-- Action Button -->
       <button id="spin-btn" onclick="spinWheel()" class="w-full py-4 bg-tinkoff-yellow hover:bg-tinkoff-yellowHover text-black text-sm font-black rounded-2xl shadow-lg transition-all active:scale-95">
-        КРУТИТЬ КОЛЕСО
+        КРУТИТЬ РУЛЕТКУ
       </button>
 
       <!-- Won Prize Container -->
-      <div id="prize-won-card" class="hidden mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl animate-fade-in">
-        <span class="text-xs text-green-400 font-bold block uppercase tracking-wider mb-1">Твой Приз</span>
-        <h3 id="won-prize-name" class="text-xl font-extrabold text-white mb-2">Фирменный Мерч</h3>
-        <p class="text-[11px] text-tinkoff-muted">Покажи этот экран организаторам на инфостойке для получения приза.</p>
+      <div id="prize-won-card" class="hidden mt-6 p-4 rounded-2xl animate-fade-in border">
+        <span id="prize-badge" class="text-xs font-bold block uppercase tracking-wider mb-1">Результат</span>
+        <h3 id="won-prize-name" class="text-xl font-extrabold text-white mb-2">Вы выиграли приз</h3>
+        <p id="prize-subtext" class="text-[11px] text-tinkoff-muted">Покажи этот экран организаторам для получения приза.</p>
       </div>
     </div>
   </div>
@@ -250,13 +250,10 @@
       }
     ];
 
+    // 50/50 Roulette Options
     const prizes = [
-      'Фирменный Мерч', 
-      '1,000 Бонусов', 
-      'Набор Выжившего', 
-      'Стикерпак', 
-      'Термокружка', 
-      'Секретный Приз'
+      'Вы выиграли приз', 
+      'Приза нет но вы держитесь'
     ];
 
     let currentGroup = 1;
@@ -357,8 +354,29 @@
 
       if (wonPrize) {
         document.getElementById('spin-btn').classList.add('hidden');
-        document.getElementById('won-prize-name').innerText = wonPrize;
-        document.getElementById('prize-won-card').classList.remove('hidden');
+        displayPrizeResult(wonPrize);
+      }
+    }
+
+    function displayPrizeResult(prizeText) {
+      const card = document.getElementById('prize-won-card');
+      const name = document.getElementById('won-prize-name');
+      const badge = document.getElementById('prize-badge');
+      const subtext = document.getElementById('prize-subtext');
+
+      name.innerText = prizeText;
+      card.classList.remove('hidden');
+
+      if (prizeText === 'Вы выиграли приз') {
+        card.className = "mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl animate-fade-in";
+        badge.className = "text-xs font-bold block uppercase tracking-wider mb-1 text-green-400";
+        badge.innerText = "🎉 ПОБЕДА!";
+        subtext.innerText = "Покажи этот экран организаторам на инфостойке для получения приза.";
+      } else {
+        card.className = "mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl animate-fade-in";
+        badge.className = "text-xs font-bold block uppercase tracking-wider mb-1 text-amber-400";
+        badge.innerText = "😅 НЕ ПОВЕЗЛО";
+        subtext.innerText = "Спасибо за участие! Главное — не падать духом!";
       }
     }
 
@@ -370,7 +388,7 @@
       const numPrizes = prizes.length;
       const sliceAngle = (2 * Math.PI) / numPrizes;
 
-      const colors = ['#2A2A2D', '#1F1F22', '#38383C', '#222225', '#2E2E32', '#1B1B1E'];
+      const colors = ['#2A2A2D', '#38383C'];
 
       ctx.clearRect(0, 0, 256, 256);
 
@@ -385,16 +403,29 @@
         ctx.fill();
 
         ctx.strokeStyle = '#FFDD2D';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         ctx.save();
         ctx.translate(128, 128);
         ctx.rotate(startAngle + sliceAngle / 2);
-        ctx.textAlign = 'right';
+        ctx.textAlign = 'center';
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 9px sans-serif';
-        ctx.fillText(prizes[i], 115, 3);
+        ctx.font = 'bold 10px sans-serif';
+
+        // Wrap text onto two lines if needed
+        const text = prizes[i];
+        if (text.length > 15) {
+          const mid = Math.floor(text.length / 2);
+          const spaceIdx = text.indexOf(' ', mid) !== -1 ? text.indexOf(' ', mid) : text.lastIndexOf(' ', mid);
+          const line1 = text.substring(0, spaceIdx);
+          const line2 = text.substring(spaceIdx + 1);
+          ctx.fillText(line1, 70, -4);
+          ctx.fillText(line2, 70, 8);
+        } else {
+          ctx.fillText(text, 70, 3);
+        }
+
         ctx.restore();
       }
     }
@@ -407,7 +438,8 @@
       spinBtn.disabled = true;
       spinBtn.innerText = 'ВРАЩЕНИЕ...';
 
-      const prizeIndex = Math.floor(Math.random() * prizes.length);
+      // Strict 50/50 Chance
+      const prizeIndex = Math.random() < 0.5 ? 0 : 1;
       wonPrize = prizes[prizeIndex];
 
       const numPrizes = prizes.length;
@@ -428,12 +460,10 @@
         clearInterval(interval);
         isSpinning = false;
 
-        tg.HapticFeedback?.notificationOccurred('success');
+        tg.HapticFeedback?.notificationOccurred(prizeIndex === 0 ? 'success' : 'warning');
         spinBtn.classList.add('hidden');
 
-        document.getElementById('won-prize-name').innerText = wonPrize;
-        document.getElementById('prize-won-card').classList.remove('hidden');
-
+        displayPrizeResult(wonPrize);
         saveState();
       }, 4000);
     }
@@ -482,7 +512,7 @@
     }
 
     function resetProgress() {
-      if (confirm('Сбросить весь прогресс и выигранные призы?')) {
+      if (confirm('Сбросить весь прогресс и результат рулетки?')) {
         activities.forEach(act => act.completed = false);
         wonPrize = null;
         saveState();
@@ -491,7 +521,7 @@
         if (canvas) canvas.style.transform = 'rotate(0deg)';
         
         document.getElementById('spin-btn').classList.remove('hidden');
-        document.getElementById('spin-btn').innerText = 'КРУТИТЬ КОЛЕСО';
+        document.getElementById('spin-btn').innerText = 'КРУТИТЬ РУЛЕТКУ';
         document.getElementById('spin-btn').disabled = false;
         document.getElementById('prize-won-card').classList.add('hidden');
 
