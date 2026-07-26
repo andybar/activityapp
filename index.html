@@ -435,86 +435,70 @@
 
     // --- FALLOUT WHEEL CANVAS RENDERER --- //
 
+    // --- FALLOUT WHEEL CANVAS RENDERER --- //
+
+    // Define the 5 Wheel Segments
+    const WHEEL_SEGMENTS = [
+      { id: 'sticker_1', label: 'STICKER PACK 1', color: '#10B981', textColor: '#55FF55', isPrize: false },
+      { id: 'nothing', label: 'ПРИЗА НЕТ', color: '#292524', textColor: '#9CA3AF', isPrize: false },
+      { id: 'sticker_2', label: 'STICKER PACK 2', color: '#3B82F6', textColor: '#60A5FA', isPrize: false },
+      { id: 'sticker_3', label: 'STICKER PACK 3', color: '#8B5CF6', textColor: '#C084FC', isPrize: false },
+      { id: 'prize', label: 'ГЛАВНЫЙ ПРИЗ 🎉', color: '#D97706', textColor: '#FDE047', isPrize: true }
+    ];
+
     function drawWheel() {
       const canvas = document.getElementById('wheel-canvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, 256, 256);
 
-      // Sector 0: Winner Half (Vault Steel / Dark Rust)
-      // Sector 1: Hazard Yellow & Black Stripes Half
-      for (let i = 0; i < 2; i++) {
-        const startAngle = (i * Math.PI) + (Math.PI / 2);
-        const endAngle = startAngle + Math.PI;
+      const totalSegments = WHEEL_SEGMENTS.length;
+      const arcSize = (Math.PI * 2) / totalSegments; // 72 degrees per slice
 
+      for (let i = 0; i < totalSegments; i++) {
+        const seg = WHEEL_SEGMENTS[i];
+        const startAngle = i * arcSize - Math.PI / 2; // Offset by -90 deg so slice 0 starts at top
+        const endAngle = startAngle + arcSize;
+
+        // Draw Slice Background
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(128, 128);
         ctx.arc(128, 128, 128, startAngle, endAngle);
         ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
 
-        if (i === 0) {
-          // Sector 0: Dark Metallic Steel with Green/Vault Accent
-          ctx.fillStyle = '#1C1917';
-          ctx.fill();
-
-          // Outer green Vault rim arc
-          ctx.beginPath();
-          ctx.arc(128, 128, 120, startAngle, endAngle);
-          ctx.strokeStyle = '#10B981';
-          ctx.lineWidth = 4;
-          ctx.stroke();
-        } else {
-          // Sector 1: Post-Apocalyptic Hazard Pattern
-          ctx.fillStyle = '#292524';
-          ctx.fill();
-
-          ctx.clip(); // Clip hazard stripes within this slice
-
-          // Draw diagonal Hazard Stripes
-          ctx.fillStyle = '#D97706';
-          for (let j = -256; j < 512; j += 32) {
-            ctx.beginPath();
-            ctx.moveTo(j, 0);
-            ctx.lineTo(j + 16, 0);
-            ctx.lineTo(j - 128, 256);
-            ctx.lineTo(j - 144, 256);
-            ctx.fill();
-          }
-        }
+        // Divider Line
+        ctx.strokeStyle = '#F59E0B';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         ctx.restore();
 
-        // Rusted Divider Ring
-        ctx.beginPath();
-        ctx.moveTo(128, 128);
-        ctx.arc(128, 128, 128, startAngle, endAngle);
-        ctx.strokeStyle = '#F59E0B';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Text Rendering
+        // Render Text Inside Slice
         ctx.save();
         ctx.translate(128, 128);
-        ctx.rotate(startAngle + Math.PI / 2);
-        ctx.textAlign = 'center';
+        // Rotate to middle of current segment
+        ctx.rotate(startAngle + arcSize / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
 
-        if (i === 0) {
-          ctx.fillStyle = '#55FF55';
-          ctx.font = 'bold 12px monospace';
-          ctx.shadowColor = '#00FF66';
-          ctx.shadowBlur = 6;
-          ctx.fillText('ВЫ ВЫИГРАЛИ', 0, -62);
-          ctx.fillText('ПРИЗ 🎉', 0, -46);
-        } else {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = 'bold 12px monospace';
-          ctx.shadowColor = '#000000';
-          ctx.shadowBlur = 8;
-          ctx.fillText('ПРИЗА НЕТ,', 0, -62);
-          ctx.fillText('НО ДЕРЖИТЕСЬ ☢️', 0, -46);
-        }
+        ctx.fillStyle = seg.textColor;
+        ctx.font = 'bold 10px monospace';
+        ctx.shadowColor = '#000000';
+        ctx.shadowBlur = 4;
+        
+        // Offset text towards outer edge of the segment
+        ctx.fillText(seg.label, 115, 0);
 
         ctx.restore();
       }
+
+      // Outer Rusted Rim
+      ctx.beginPath();
+      ctx.arc(128, 128, 126, 0, Math.PI * 2);
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
       // Center Vault Hub
       ctx.beginPath();
@@ -541,27 +525,42 @@
       spinBtn.disabled = true;
       spinBtn.innerText = 'ВРАЩЕНИЕ [CALCULATING...]';
 
-      // Strict 50/50 Chance
-      const prizeIndex = Math.random() < 0.5 ? 0 : 1;
-      wonPrize = prizes[prizeIndex];
+      // --- WIN PROBABILITY WEIGHTING ---
+      // 0.5% chance for main prize, remaining 99.5% split evenly among the other 4 segments (~24.875% each)
+      const rand = Math.random();
+      let selectedIndex = 0;
 
-      // Exact angle positioning under top pointer
-      const targetBaseAngle = prizeIndex === 0 ? 90 : 270;
-      const fullRotations = 360 * 6; // 6 full turns
-      const finalRotation = fullRotations + targetBaseAngle;
+      if (rand < 0.005) {
+        // Main Prize (Segment index 4)
+        selectedIndex = 4;
+      } else {
+        // Pick randomly among index 0, 1, 2, 3
+        selectedIndex = Math.floor(Math.random() * 4);
+      }
+
+      wonPrize = WHEEL_SEGMENTS[selectedIndex];
+
+      // Calculate Target Angle (each segment is 72 degrees)
+      const segmentDegrees = 360 / WHEEL_SEGMENTS.length;
+      // Reverse direction offset to align chosen slice under top pointer
+      const targetDegree = 360 - (selectedIndex * segmentDegrees + segmentDegrees / 2);
+      
+      const fullRotations = 360 * 6; // 6 full rotations for animation effect
+      const finalRotation = fullRotations + targetDegree;
 
       const canvas = document.getElementById('wheel-canvas');
       canvas.style.transform = `rotate(${finalRotation}deg)`;
 
+      // Haptic Ticks during spin
       let interval = setInterval(() => {
         tg.HapticFeedback?.impactOccurred('medium');
-      }, 250);
+      }, 220);
 
       setTimeout(() => {
         clearInterval(interval);
         isSpinning = false;
 
-        tg.HapticFeedback?.notificationOccurred(prizeIndex === 0 ? 'success' : 'warning');
+        tg.HapticFeedback?.notificationOccurred(wonPrize.isPrize ? 'success' : 'warning');
         spinBtn.classList.add('hidden');
 
         displayPrizeResult(wonPrize);
