@@ -526,26 +526,35 @@
       spinBtn.innerText = 'ВРАЩЕНИЕ [CALCULATING...]';
 
       // --- WIN PROBABILITY WEIGHTING ---
-      // 0.5% chance for main prize, remaining 99.5% split evenly among the other 4 segments (~24.875% each)
+      // 0.5% chance for main prize (Index 4)
+      // 99.5% split evenly among the remaining 4 segments (~24.875% each)
       const rand = Math.random();
       let selectedIndex = 0;
 
       if (rand < 0.005) {
-        // Main Prize (Segment index 4)
-        selectedIndex = 4;
+        selectedIndex = 4; // Main Prize
       } else {
-        // Pick randomly among index 0, 1, 2, 3
-        selectedIndex = Math.floor(Math.random() * 4);
+        selectedIndex = Math.floor(Math.random() * 4); // 0, 1, 2, or 3
       }
 
       wonPrize = WHEEL_SEGMENTS[selectedIndex];
 
-      // Calculate Target Angle (each segment is 72 degrees)
-      const segmentDegrees = 360 / WHEEL_SEGMENTS.length;
-      // Reverse direction offset to align chosen slice under top pointer
-      const targetDegree = 360 - (selectedIndex * segmentDegrees + segmentDegrees / 2);
+      // --- EXACT CENTER CALCULATIONS ---
+      const totalSegments = WHEEL_SEGMENTS.length;
+      const segmentDegrees = 360 / totalSegments; // 72° per slice
       
-      const fullRotations = 360 * 6; // 6 full rotations for animation effect
+      // Center angle of the selected segment relative to slice start
+      const segmentCenterAngle = (selectedIndex * segmentDegrees) + (segmentDegrees / 2);
+
+      // Add a tiny random jitter within the central 60% of the slice 
+      // (keeps it organic while guaranteed to land dead-center in the slice body)
+      const jitter = (Math.random() - 0.5) * (segmentDegrees * 0.3);
+
+      // Total target degree calculation:
+      // Subtracting from 360 reverses canvas rotation to match CSS clockwise rotation
+      const targetDegree = (360 - (segmentCenterAngle + jitter)) % 360;
+
+      const fullRotations = 360 * 6; // 6 full turns for dramatic spin
       const finalRotation = fullRotations + targetDegree;
 
       const canvas = document.getElementById('wheel-canvas');
