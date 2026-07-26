@@ -71,20 +71,20 @@
         T
       </div>
       <h1 class="text-2xl font-bold tracking-tight text-white">Квест Выжившего</h1>
-      <p class="text-xs text-tinkoff-muted mt-0.5">Пройди 4 задания Группы 1 и 1 задание Группы 2</p>
+      <p class="text-xs text-tinkoff-muted mt-0.5">Пройди 4 задания Группы 1 и 2 задания Группы 2</p>
       
       <!-- Overall Progress Indicator -->
       <div class="mt-4 bg-tinkoff-card border border-tinkoff-border rounded-2xl p-4 shadow-sm">
         <div class="flex justify-between items-center mb-2">
-          <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/5 Целей Выполнено</span>
-          <button onclick="resetProgress()" class="text-xs text-tinkoff-yellow hover:underline font-medium">Сброс</button>
+          <span id="progress-text" class="text-xs font-semibold text-tinkoff-muted">0/6 Целей Выполнено</span>
+          <button onclick="resetProgress()" class="text-xs text-tinkoff-yellow hover:underline font-medium">Сброс задач</button>
         </div>
         <div class="bg-tinkoff-dark rounded-full h-2 overflow-hidden">
           <div id="progress-bar" class="bg-tinkoff-yellow h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
         </div>
       </div>
 
-      <!-- Banner unlocked when requirements are met (4 in Group 1 AND 1 in Group 2) -->
+      <!-- Banner unlocked when requirements are met (4 in Group 1 AND 2 in Group 2) -->
       <div id="prize-unlock-banner" class="hidden mt-4 p-4 bg-gradient-to-r from-tinkoff-yellow to-amber-500 rounded-2xl text-black text-left shadow-lg cursor-pointer active:scale-98 transition-all" onclick="showPrizeScreen()">
         <div class="flex items-center justify-between">
           <div>
@@ -181,7 +181,12 @@
             <span id="prize-badge" class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 glow-green">СТАТУС: ВЫЧИСЛЕНО</span>
           </div>
           <h3 id="won-prize-name" class="text-lg font-black text-white font-sans mb-1">Вы выиграли приз</h3>
-          <p id="prize-subtext" class="text-[11px] text-stone-400 font-sans">Предъявите этот терминал смотрителю Убежища.</p>
+          <p id="prize-subtext" class="text-[11px] text-stone-400 font-sans mb-4">Предъявите этот терминал смотрителю Убежища.</p>
+          
+          <!-- Dedicated Roulette Reset Button -->
+          <button onclick="resetRouletteOnly()" class="w-full py-2.5 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 text-xs font-bold uppercase tracking-wider rounded-lg border border-amber-500/50 transition-all active:scale-95">
+            🔄 СБРОС РУЛЕТКИ (СБРОСИТЬ РЕЗУЛЬТАТ)
+          </button>
         </div>
       </div>
     </div>
@@ -300,10 +305,13 @@
       }
     ];
 
-    // 50/50 Fallout Roulette Options
-    const prizes = [
-      'Вы выиграли приз', 
-      'Приза нет но вы держитесь'
+    // 5 Wheel Segments Config
+    const WHEEL_SEGMENTS = [
+      { id: 'sticker_1', label: 'STICKER PACK 1', color: '#10B981', textColor: '#55FF55', isPrize: true, text: 'Стикерпак #1' },
+      { id: 'nothing', label: 'ПРИЗА НЕТ', color: '#292524', textColor: '#9CA3AF', isPrize: false, text: 'Приза нет, но вы держитесь' },
+      { id: 'sticker_2', label: 'STICKER PACK 2', color: '#3B82F6', textColor: '#60A5FA', isPrize: true, text: 'Стикерпак #2' },
+      { id: 'sticker_3', label: 'STICKER PACK 3', color: '#8B5CF6', textColor: '#C084FC', isPrize: true, text: 'Стикерпак #3' },
+      { id: 'prize', label: 'ГЛАВНЫЙ ПРИЗ 🎉', color: '#D97706', textColor: '#FDE047', isPrize: true, text: 'ГЛАВНЫЙ ПРИЗ 🎉' }
     ];
 
     let currentGroup = 1;
@@ -408,17 +416,17 @@
       }
     }
 
-    function displayPrizeResult(prizeText) {
+    function displayPrizeResult(prizeObj) {
       const card = document.getElementById('prize-won-card');
       const name = document.getElementById('won-prize-name');
       const badge = document.getElementById('prize-badge');
       const icon = document.getElementById('prize-badge-icon');
       const subtext = document.getElementById('prize-subtext');
 
-      name.innerText = prizeText;
+      name.innerText = prizeObj.text || prizeObj.label;
       card.classList.remove('hidden');
 
-      if (prizeText === 'Вы выиграли приз') {
+      if (prizeObj.isPrize) {
         card.className = "mt-6 p-4 rounded-xl border-2 border-emerald-500/60 bg-emerald-950/40 text-left relative overflow-hidden";
         badge.className = "text-[11px] font-bold uppercase tracking-wider text-emerald-400 glow-green";
         badge.innerText = "РЕЗУЛЬТАТ: ВЫИГРЫШ [VAULT-TEC PRIZE]";
@@ -435,31 +443,19 @@
 
     // --- FALLOUT WHEEL CANVAS RENDERER --- //
 
-    // --- FALLOUT WHEEL CANVAS RENDERER --- //
-
-    // Define the 5 Wheel Segments
-    const WHEEL_SEGMENTS = [
-      { id: 'sticker_1', label: 'STICKER PACK 1', color: '#10B981', textColor: '#55FF55', isPrize: false },
-      { id: 'nothing', label: 'ПРИЗА НЕТ', color: '#292524', textColor: '#9CA3AF', isPrize: false },
-      { id: 'sticker_2', label: 'STICKER PACK 2', color: '#3B82F6', textColor: '#60A5FA', isPrize: false },
-      { id: 'sticker_3', label: 'STICKER PACK 3', color: '#8B5CF6', textColor: '#C084FC', isPrize: false },
-      { id: 'prize', label: 'ГЛАВНЫЙ ПРИЗ 🎉', color: '#D97706', textColor: '#FDE047', isPrize: true }
-    ];
-
     function drawWheel() {
       const canvas = document.getElementById('wheel-canvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, 256, 256);
 
       const totalSegments = WHEEL_SEGMENTS.length;
-      const arcSize = (Math.PI * 2) / totalSegments; // 72 degrees per slice
+      const arcSize = (Math.PI * 2) / totalSegments;
 
       for (let i = 0; i < totalSegments; i++) {
         const seg = WHEEL_SEGMENTS[i];
-        const startAngle = i * arcSize - Math.PI / 2; // Offset by -90 deg so slice 0 starts at top
+        const startAngle = i * arcSize - Math.PI / 2;
         const endAngle = startAngle + arcSize;
 
-        // Draw Slice Background
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(128, 128);
@@ -468,39 +464,33 @@
         ctx.fillStyle = seg.color;
         ctx.fill();
 
-        // Divider Line
         ctx.strokeStyle = '#F59E0B';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.restore();
 
-        // Render Text Inside Slice
         ctx.save();
         ctx.translate(128, 128);
-        // Rotate to middle of current segment
         ctx.rotate(startAngle + arcSize / 2);
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
         ctx.fillStyle = seg.textColor;
-        ctx.font = 'bold 10px monospace';
+        ctx.font = 'bold 9px monospace';
         ctx.shadowColor = '#000000';
         ctx.shadowBlur = 4;
         
-        // Offset text towards outer edge of the segment
         ctx.fillText(seg.label, 115, 0);
 
         ctx.restore();
       }
 
-      // Outer Rusted Rim
       ctx.beginPath();
       ctx.arc(128, 128, 126, 0, Math.PI * 2);
       ctx.strokeStyle = '#F59E0B';
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Center Vault Hub
       ctx.beginPath();
       ctx.arc(128, 128, 22, 0, Math.PI * 2);
       ctx.fillStyle = '#0F172A';
@@ -509,7 +499,6 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Bolt detailing in center hub
       ctx.fillStyle = '#55FF55';
       ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
@@ -525,7 +514,6 @@
       spinBtn.disabled = true;
       spinBtn.innerText = 'ВРАЩЕНИЕ [CALCULATING...]';
 
-      // --- WIN PROBABILITY WEIGHTING ---
       // 0.5% chance for main prize (Index 4)
       // 99.5% split evenly among the remaining 4 segments (~24.875% each)
       const rand = Math.random();
@@ -534,33 +522,22 @@
       if (rand < 0.005) {
         selectedIndex = 4; // Main Prize
       } else {
-        selectedIndex = Math.floor(Math.random() * 4); // 0, 1, 2, or 3
+        selectedIndex = Math.floor(Math.random() * 4); // Index 0, 1, 2, or 3
       }
 
       wonPrize = WHEEL_SEGMENTS[selectedIndex];
 
-      // --- EXACT CENTER CALCULATIONS ---
       const totalSegments = WHEEL_SEGMENTS.length;
-      const segmentDegrees = 360 / totalSegments; // 72° per slice
-      
-      // Center angle of the selected segment relative to slice start
+      const segmentDegrees = 360 / totalSegments;
       const segmentCenterAngle = (selectedIndex * segmentDegrees) + (segmentDegrees / 2);
+      const targetDegree = (360 - segmentCenterAngle) % 360;
 
-      // Add a tiny random jitter within the central 60% of the slice 
-      // (keeps it organic while guaranteed to land dead-center in the slice body)
-      const jitter = (Math.random() - 0.5) * (segmentDegrees * 0.3);
-
-      // Total target degree calculation:
-      // Subtracting from 360 reverses canvas rotation to match CSS clockwise rotation
-      const targetDegree = (360 - (segmentCenterAngle + jitter)) % 360;
-
-      const fullRotations = 360 * 6; // 6 full turns for dramatic spin
+      const fullRotations = 360 * 6;
       const finalRotation = fullRotations + targetDegree;
 
       const canvas = document.getElementById('wheel-canvas');
       canvas.style.transform = `rotate(${finalRotation}deg)`;
 
-      // Haptic Ticks during spin
       let interval = setInterval(() => {
         tg.HapticFeedback?.impactOccurred('medium');
       }, 220);
@@ -575,6 +552,23 @@
         displayPrizeResult(wonPrize);
         saveState();
       }, 4500);
+    }
+
+    // --- ROULETTE RESET ONLY --- //
+    function resetRouletteOnly() {
+      wonPrize = null;
+      saveState();
+
+      const canvas = document.getElementById('wheel-canvas');
+      if (canvas) canvas.style.transform = 'rotate(0deg)';
+
+      const spinBtn = document.getElementById('spin-btn');
+      spinBtn.classList.remove('hidden');
+      spinBtn.innerText = '[ ЗАПУСК МЕХАНИЗМА ]';
+      spinBtn.disabled = false;
+
+      document.getElementById('prize-won-card').classList.add('hidden');
+      tg.HapticFeedback?.notificationOccurred('success');
     }
 
     // --- DATA & STORAGE LOGIC --- //
@@ -621,7 +615,7 @@
     }
 
     function resetProgress() {
-      if (confirm('Сбросить весь прогресс и результат рулетки?')) {
+      if (confirm('Сбросить весь прогресс заданий и результат рулетки?')) {
         activities.forEach(act => act.completed = false);
         wonPrize = null;
         saveState();
@@ -642,11 +636,9 @@
       const listEl = document.getElementById('activity-list');
       listEl.innerHTML = '';
       
-      // Calculate completion metrics
       const group1Completed = activities.filter(a => a.group === 1 && a.completed).length;
       const group2Completed = activities.filter(a => a.group === 2 && a.completed).length;
 
-      // Filter activities based on active tab
       const currentTasks = activities.filter(act => act.group === currentGroup);
 
       currentTasks.forEach(act => {
@@ -675,17 +667,15 @@
         listEl.appendChild(item);
       });
 
-      // Target criteria calculation (4 from G1 + 1 from G2 = 5 total target points)
       const targetG1 = Math.min(group1Completed, 4);
-      const targetG2 = Math.min(group2Completed, 1);
+      const targetG2 = Math.min(group2Completed, 2);
       const currentTargetPoints = targetG1 + targetG2;
 
-      const percent = Math.round((currentTargetPoints / 5) * 100);
+      const percent = Math.round((currentTargetPoints / 6) * 100);
       document.getElementById('progress-bar').style.width = `${percent}%`;
-      document.getElementById('progress-text').innerText = `${currentTargetPoints}/5 Целей Выполнено`;
+      document.getElementById('progress-text').innerText = `${currentTargetPoints}/6 Целей Выполнено`;
 
-      // Check unlock condition: 4+ in Group 1 AND 1+ in Group 2
-      const isUnlocked = group1Completed >= 4 && group2Completed >= 1;
+      const isUnlocked = group1Completed >= 4 && group2Completed >= 2;
 
       const banner = document.getElementById('prize-unlock-banner');
       if (isUnlocked) {
@@ -725,7 +715,7 @@
         const group1Completed = activities.filter(a => a.group === 1 && a.completed).length;
         const group2Completed = activities.filter(a => a.group === 2 && a.completed).length;
         
-        if (group1Completed >= 4 && group2Completed >= 1) {
+        if (group1Completed >= 4 && group2Completed >= 2) {
           setTimeout(() => {
             showPrizeScreen();
           }, 1200);
