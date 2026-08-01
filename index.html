@@ -521,7 +521,7 @@
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
+        const data = await response.text();
 
         // Extract selected index (supports { selectedIndex: X } or { index: X } or raw number)
         if (typeof data === 'number') {
