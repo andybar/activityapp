@@ -514,16 +514,8 @@
       spinBtn.disabled = true;
       spinBtn.innerText = 'ВРАЩЕНИЕ [CALCULATING...]';
 
-      // 0.5% chance for main prize (Index 4)
-      // 99.5% split evenly among the remaining 4 segments (~24.875% each)
-      const rand = Math.random();
-      let selectedIndex = 0;
-
-      if (rand < 0.005) {
-        selectedIndex = 4; // Main Prize
-      } else {
-        selectedIndex = Math.floor(Math.random() * 4); // Index 0, 1, 2, or 3
-      }
+      const response = await fetch('https://xn----7sbksbd0a4anp.xn--p1ai/api/gacha/spin');
+      var selectedIndex = await response.text();
 
       wonPrize = WHEEL_SEGMENTS[selectedIndex];
 
