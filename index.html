@@ -523,14 +523,7 @@
         }
         const data = await response.text();
 
-        // Extract selected index (supports { selectedIndex: X } or { index: X } or raw number)
-        if (typeof data === 'number') {
-          selectedIndex = data;
-        } else if (data.selectedIndex !== undefined) {
-          selectedIndex = Number(data.selectedIndex);
-        } else if (data.index !== undefined) {
-          selectedIndex = Number(data.index);
-        }
+        selectedIndex = +data;
 
         // Ensure index stays within bounds [0, 4]
         if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= WHEEL_SEGMENTS.length) {
