@@ -6,6 +6,8 @@
   <title>Квест Выжившего</title>
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- HTML5 QR Code Scanner Fallback for Mobile Browsers -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -193,10 +195,45 @@
   </div>
 
 
+  <!-- ==================== WEB BROWSER QR SCANNER MODAL ==================== -->
+  <div id="web-qr-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4">
+    <div class="bg-tinkoff-card border border-tinkoff-border rounded-3xl p-4 w-full max-w-sm text-center">
+      <h3 class="text-sm font-bold text-white mb-2">Отсканируйте QR-код</h3>
+      <div id="reader" class="w-full rounded-2xl overflow-hidden bg-black"></div>
+      <button onclick="stopWebQrScanner()" class="mt-4 py-2.5 px-6 bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl transition-all">
+        Отмена
+      </button>
+    </div>
+  </div>
+
+
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    // Safe Telegram SDK wrapper
+    const tg = window.Telegram?.WebApp || null;
+    const isTelegramApp = Boolean(tg && tg.initData && tg.initData.length > 0);
+
+    if (tg) {
+      if (typeof tg.ready === 'function') tg.ready();
+      if (typeof tg.expand === 'function') tg.expand();
+    }
+
+    // Unified helper functions for Alerts & Haptics
+    function alertMessage(msg) {
+      if (tg && typeof tg.showAlert === 'function') {
+        tg.showAlert(msg);
+      } else {
+        alert(msg);
+      }
+    }
+
+    function triggerHaptic(type, level) {
+      if (!tg || !tg.HapticFeedback) return;
+      if (type === 'impact' && typeof tg.HapticFeedback.impactOccurred === 'function') {
+        tg.HapticFeedback.impactOccurred(level || 'medium');
+      } else if (type === 'notification' && typeof tg.HapticFeedback.notificationOccurred === 'function') {
+        tg.HapticFeedback.notificationOccurred(level || 'success');
+      }
+    }
 
     // Combined Activities (Group 1 + Group 2)
     let activities = [
@@ -318,6 +355,7 @@
     let currentActivityId = null;
     let wonPrize = null;
     let isSpinning = false;
+    let html5QrScanner = null;
 
     // --- TAB SWITCHER LOGIC --- //
 
@@ -351,7 +389,7 @@
       document.getElementById('screen-list').classList.remove('hidden');
       currentActivityId = null;
 
-      if (tg.BackButton) tg.BackButton.hide();
+      if (tg?.BackButton) tg.BackButton.hide();
       renderActivities();
     }
 
@@ -393,7 +431,7 @@
       hideAllScreens();
       document.getElementById('screen-detail').classList.remove('hidden');
 
-      if (tg.BackButton) {
+      if (tg?.BackButton) {
         tg.BackButton.show();
         tg.BackButton.onClick(showListScreen);
       }
@@ -403,7 +441,7 @@
       hideAllScreens();
       document.getElementById('screen-prize').classList.remove('hidden');
 
-      if (tg.BackButton) {
+      if (tg?.BackButton) {
         tg.BackButton.show();
         tg.BackButton.onClick(showListScreen);
       }
@@ -531,7 +569,7 @@
         }
       } catch (error) {
         console.error('Failed to fetch spin result from API:', error);
-        tg.showAlert('Ошибка сервера при вращении рулетки!');
+        alertMessage('Ошибка сервера при вращении рулетки!');
         
         // Reset UI state on error
         isSpinning = false;
@@ -554,20 +592,21 @@
       canvas.style.transform = `rotate(${finalRotation}deg)`;
 
       let interval = setInterval(() => {
-        tg.HapticFeedback?.impactOccurred('medium');
+        triggerHaptic('impact', 'medium');
       }, 220);
 
       setTimeout(() => {
         clearInterval(interval);
         isSpinning = false;
 
-        tg.HapticFeedback?.notificationOccurred(wonPrize.isPrize ? 'success' : 'warning');
+        triggerHaptic('notification', wonPrize.isPrize ? 'success' : 'warning');
         spinBtn.classList.add('hidden');
 
         displayPrizeResult(wonPrize);
         saveState();
       }, 4500);
     }
+
     // --- ROULETTE RESET ONLY --- //
     function resetRouletteOnly() {
       wonPrize = null;
@@ -582,7 +621,7 @@
       spinBtn.disabled = false;
 
       document.getElementById('prize-won-card').classList.add('hidden');
-      tg.HapticFeedback?.notificationOccurred('success');
+      triggerHaptic('notification', 'success');
     }
 
     // --- DATA & STORAGE LOGIC --- //
@@ -603,7 +642,7 @@
         } catch (e) {}
       };
 
-      if (tg.CloudStorage) {
+      if (tg?.CloudStorage) {
         tg.CloudStorage.getItem('user_app_data', (err, value) => {
           if (!err) parseData(value);
           renderActivities();
@@ -624,7 +663,7 @@
       };
 
       const dataString = JSON.stringify(stateToSave);
-      if (tg.CloudStorage) tg.CloudStorage.setItem('user_app_data', dataString);
+      if (tg?.CloudStorage) tg.CloudStorage.setItem('user_app_data', dataString);
       localStorage.setItem('user_app_data', dataString);
     }
 
@@ -699,17 +738,49 @@
       }
     }
 
-    // --- QR SCANNER LOGIC --- //
+    // --- HYBRID QR SCANNER LOGIC --- //
 
     function startQrScanner() {
       if (!currentActivityId) return;
 
-      if (tg.showScanQrPopup) {
+      if (tg && typeof tg.showScanQrPopup === 'function') {
         tg.showScanQrPopup({
           text: 'Наведите камеру на QR-код локации'
         }, handleQrResult);
       } else {
-        alert('Сканер QR-кодов не поддерживается в этом клиенте.');
+        startWebQrScanner();
+      }
+    }
+
+    function startWebQrScanner() {
+      document.getElementById('web-qr-modal').classList.remove('hidden');
+      if (!html5QrScanner) {
+        html5QrScanner = new Html5Qrcode("reader");
+      }
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          if (handleQrResult(decodedText)) {
+            stopWebQrScanner();
+          }
+        },
+        (errorMessage) => {}
+      ).catch(err => {
+        alertMessage('Ошибка доступа к камере: ' + err);
+        stopWebQrScanner();
+      });
+    }
+
+    function stopWebQrScanner() {
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => {
+          document.getElementById('web-qr-modal').classList.add('hidden');
+        }).catch(() => {
+          document.getElementById('web-qr-modal').classList.add('hidden');
+        });
+      } else {
+        document.getElementById('web-qr-modal').classList.add('hidden');
       }
     }
 
@@ -720,9 +791,11 @@
         activity.completed = true;
         saveState();
         
-        tg.closeScanQrPopup();
-        tg.HapticFeedback?.notificationOccurred('success');
-        tg.showAlert('🎉 Задание выполнено!');
+        if (tg && typeof tg.closeScanQrPopup === 'function') {
+          tg.closeScanQrPopup();
+        }
+        triggerHaptic('notification', 'success');
+        alertMessage('🎉 Задание выполнено!');
         
         showDetailScreen(currentActivityId);
         
@@ -737,8 +810,8 @@
 
         return true; 
       } else {
-        tg.HapticFeedback?.notificationOccurred('error');
-        tg.showAlert('❌ Неверный QR-код для этой локации!');
+        triggerHaptic('notification', 'error');
+        alertMessage('❌ Неверный QR-код для этой локации!');
         return false;
       }
     }
