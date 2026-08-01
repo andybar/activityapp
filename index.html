@@ -219,7 +219,7 @@
     const isTelegramApp = Boolean(tg && tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0);
 
     document.addEventListener('DOMContentLoaded', () => {
-      if (tg) {
+      if (tg && isTelegramApp) {
         if (typeof tg.ready === 'function') tg.ready();
         if (typeof tg.expand === 'function') tg.expand();
 
@@ -237,7 +237,7 @@
 
     // Unified helper functions for Alerts & Haptics
     function alertMessage(msg) {
-      if (tg && typeof tg.showAlert === 'function') {
+      if (tg && isTelegramApp && typeof tg.showAlert === 'function') {
         tg.showAlert(msg);
       } else {
         alert(msg);
@@ -245,7 +245,7 @@
     }
 
     function triggerHaptic(type, level) {
-      if (!tg || !tg.HapticFeedback) return;
+      if (!tg || !isTelegramApp || !tg.HapticFeedback) return;
       if (type === 'impact' && typeof tg.HapticFeedback.impactOccurred === 'function') {
         tg.HapticFeedback.impactOccurred(level || 'medium');
       } else if (type === 'notification' && typeof tg.HapticFeedback.notificationOccurred === 'function') {
@@ -312,7 +312,7 @@
       document.getElementById('screen-list').classList.remove('hidden');
       currentActivityId = null;
 
-      if (tg?.BackButton) tg.BackButton.hide();
+      if (tg && isTelegramApp && tg.BackButton) tg.BackButton.hide();
       renderActivities();
     }
 
@@ -354,7 +354,7 @@
       hideAllScreens();
       document.getElementById('screen-detail').classList.remove('hidden');
 
-      if (tg?.BackButton) {
+      if (tg && isTelegramApp && tg.BackButton) {
         tg.BackButton.show();
         tg.BackButton.onClick(showListScreen);
       }
@@ -364,7 +364,7 @@
       hideAllScreens();
       document.getElementById('screen-prize').classList.remove('hidden');
 
-      if (tg?.BackButton) {
+      if (tg && isTelegramApp && tg.BackButton) {
         tg.BackButton.show();
         tg.BackButton.onClick(showListScreen);
       }
@@ -557,9 +557,8 @@
           }
         } catch (e) {}
       };
-      const isTelegramApp = Boolean(tg && tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0);
 
-      if (isTelegramApp && tg?.CloudStorage) {
+      if (tg && isTelegramApp && tg.CloudStorage) {
         tg.CloudStorage.getItem('user_app_data', (err, value) => {
           if (!err && value) {
             parseData(value);
@@ -584,7 +583,7 @@
       };
 
       const dataString = JSON.stringify(stateToSave);
-      if (tg?.CloudStorage) {
+      if (tg && isTelegramApp && tg.CloudStorage) {
         tg.CloudStorage.setItem('user_app_data', dataString);
       }
       localStorage.setItem('user_app_data', dataString);
@@ -663,9 +662,8 @@
     // --- HYBRID QR SCANNER LOGIC --- //
     function startQrScanner() {
       if (!currentActivityId) return;
-      const isTelegramApp = Boolean(tg && tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0);
 
-      if (isTelegramApp && tg && typeof tg.showScanQrPopup === 'function') {
+      if (tg && isTelegramApp && typeof tg.showScanQrPopup === 'function') {
         tg.showScanQrPopup({ text: 'Наведите камеру на QR-код локации' }, (scannedText) => {
           return handleQrResult(scannedText);
         });
@@ -715,7 +713,7 @@
         activity.completed = true;
         saveState();
         
-        if (tg && typeof tg.closeScanQrPopup === 'function') {
+        if (tg && isTelegramApp && typeof tg.closeScanQrPopup === 'function') {
           tg.closeScanQrPopup();
         }
         triggerHaptic('notification', 'success');
@@ -725,16 +723,10 @@
         
         const group1Completed = activities.filter(a => a.group === 1 && a.completed).length;
         const group2Completed = activities.filter(a => a.group === 2 && a.completed).length;
-        
-        if (group1Completed >= 4 && group2Completed >= 2) {
-          setTimeout(() => {
-            showPrizeScreen();
-          }, 1200);
-        }
-        return true; 
+        return true;
       } else {
         triggerHaptic('notification', 'error');
-        alertMessage('⚠️ Неверный QR-код для этого задания!');
+        alertMessage('❌ Неверный QR-код для этого задания!');
         return false;
       }
     }
