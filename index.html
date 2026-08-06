@@ -41,7 +41,7 @@
   </script>
   <style>
     /* Smooth realistic spinning easing */
-    #wheel-canvas {
+    #-canvas {
       transition: transform 4.5s cubic-bezier(0.12, 0.8, 0.2, 1);
     }
 
@@ -79,7 +79,7 @@
         T
       </div>
       <h1 class="text-2xl font-bold tracking-tight text-white">Квест Выжившего</h1>
-      <p class="text-xs text-tinkoff-muted mt-0.5">Пройди 4 задания Группы 1 и 2 задания Группы 2</p>
+      <p class="text-xs text-tinkoff-muted mt-0.5">Пройди 4 задания Группы 1, и 2 задания Группы 2</p>
       
       <!-- Overall Progress Indicator -->
       <div class="mt-4 bg-tinkoff-card border border-tinkoff-border rounded-2xl p-4 shadow-sm">
@@ -109,7 +109,7 @@
           Группа 1 (Локации)
         </button>
         <button id="tab-group-2" onclick="switchGroup(2)" class="flex-1 py-2 text-xs font-bold rounded-xl transition-all text-tinkoff-muted hover:text-white">
-          Группа 2 (Т-Город)
+          Группа 2 (Город)
         </button>
       </div>
     </header>
@@ -162,9 +162,9 @@
 
       <div class="relative z-10">
         <h2 class="text-xl font-black tracking-wider uppercase text-emerald-300 glow-green">РУЛЕТКА УБЕЖИЩА</h2>
-        <p class="text-[11px] text-emerald-500/80 mt-0.5 mb-5 font-sans">Испытай удачу на квантовом распределителе Vault-Tec.</p>
+        <p class="text-[11px] text-emerald-500/80 mt-0.5 mb-5 font-sans">Испытай удачу на квантовом распределителе V-Tec.</p>
 
-        <!-- Wheel Outer Case -->
+        <!--  Outer Case -->
         <div class="relative w-64 h-64 mx-auto mb-6 p-2 rounded-full bg-stone-950 border-4 border-stone-700 shadow-inner">
           
           <!-- Radiation / Hazard Top Needle -->
@@ -173,12 +173,12 @@
           <!-- Inner CRT Scanline Layer -->
           <div class="absolute inset-0 rounded-full scanlines z-20 pointer-events-none opacity-40"></div>
 
-          <!-- Canvas Wheel -->
-          <canvas id="wheel-canvas" width="256" height="256" class="w-full h-full rounded-full border-2 border-amber-500/50 shadow-2xl relative z-10"></canvas>
+          <!-- Canvas  -->
+          <canvas id="-canvas" width="256" height="256" class="w-full h-full rounded-full border-2 border-amber-500/50 shadow-2xl relative z-10"></canvas>
         </div>
 
         <!-- Terminal Spin Button -->
-        <button id="spin-btn" onclick="spinWheel()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-stone-950 text-sm font-black tracking-widest uppercase rounded-xl border-2 border-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all active:scale-95">
+        <button id="spin-btn" onclick="spin()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-stone-950 text-sm font-black tracking-widest uppercase rounded-xl border-2 border-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all active:scale-95">
           [ ЗАПУСК МЕХАНИЗМА ]
         </button>
 
@@ -255,24 +255,21 @@
 
     // Activities Configuration
     let activities = [
-      { id: 1, group: 1, category: 'Фотозона', title: 'Сделай снимок выжившего', description: 'Найди тематическую фотозону, сделай атмосферный кадр и отсканируй QR-код у инструктора.', afterText: 'Снимок сделан', qrCode: 'photo_zone_1', completed: false },
-      { id: 2, group: 1, category: 'Just Dance', title: 'Перехвати радиосигнал движением', description: 'Повтори танцевальные движения на площадке Just Dance и поймай радиоволну.', afterText: 'Радиосигнал перехвачен', qrCode: 'just_dance_2', completed: false },
-      { id: 3, group: 1, category: 'Тир', title: 'Проверь меткость в тире', description: 'Отправься в тир, порази мишени и докажи свою точность в условиях пустоши.', afterText: 'Меткость проверена', qrCode: 'shooting_range_3', completed: false },
-      { id: 4, group: 1, category: 'Арена', title: 'Вступи в дуэль на арене', description: 'Выйди на арену и сразись с соперником в честном поединке.', afterText: 'Дуэль завершена', qrCode: 'arena_duel_4', completed: false },
-      { id: 5, group: 1, category: 'Макияж', title: 'Нанеси знак своей фракции', description: 'Посети гримерный пункт и нанеси боевой грим или символ своей фракции.', afterText: 'Знак фракции нанесен', qrCode: 'makeup_faction_5', completed: false },
-      { id: 6, group: 1, category: 'Творчество', title: 'Собери элемент походной экипировки', description: 'Загляни в крафт-зону и своими руками собери полезный элемент снаряжения.', afterText: 'Элемент экипировки собран', qrCode: 'craft_gear_6', completed: false },
-      { id: 7, group: 2, category: 'Путешествия', title: 'Наметь маршрут будущей экспедиции', description: 'Открой в Т-Городе раздел «Путешествия» и сохрани авиамаршрут, отель или тур, куда хотел бы отправиться до конца года.', afterText: 'Маршрут экспедиции проложен', qrCode: 'travel_route_7', completed: false },
-      { id: 8, group: 2, category: 'Афиша', title: 'Выбери событие для вылазки', description: 'Открой в Т-Городе раздел «Афиша» и сохрани фильм, спектакль или концерт, который хотел бы посетить до конца года.', afterText: 'Культурная вылазка запланирована', qrCode: 'afisha_event_8', completed: false },
-      { id: 9, group: 2, category: 'Топливо', title: 'Отметь заправку на маршруте', description: 'Открой в Т-Городе раздел «Топливо» и сохрани удобную заправку на одном из своих обычных маршрутов.', afterText: 'Точка заправки отмечена', qrCode: 'fuel_station_9', completed: false },
-      { id: 10, group: 2, category: 'Супермаркеты', title: 'Собери запас любимых продуктов', description: 'Открой в Т-Городе раздел «Супермаркеты», выбери магазин и добавь в корзину два-три любимых товара.', afterText: 'Запас продуктов собран', qrCode: 'supermarket_supplies_10', completed: false }
+      { id: 1, group: 1, category: 'Фотозона', title: 'Сделай снимок выжившего', description: 'Найди фотозону стенда, сделай атмосферный кадр и отсканируй QR-код у инструктора', afterText: 'Снимок сделан', qrCode: 'photo_zone_1', completed: false },
+      { id: 2, group: 1, category: 'Just Dance', title: 'Перехвати радиосигнал движением', description: 'Повтори танцевальные движения на площадке Just Dance и поймай радиоволну', afterText: 'Радиосигнал перехвачен', qrCode: 'just_dance_2', completed: false },
+      { id: 3, group: 1, category: 'Тир', title: 'Проверь меткость', description: 'Отправься в тир, порази мишени и докажи свою точность в условиях пустоши', afterText: 'Меткость проверена', qrCode: 'shooting_range_3', completed: false },
+      { id: 4, group: 1, category: 'Арена', title: 'Вступи в дуэль', description: 'Выйди на арену и сразись с соперником в честном поединке', afterText: 'Дуэль завершена', qrCode: 'arena_duel_4', completed: false },
+      { id: 5, group: 1, category: 'Боевой знак', title: 'Нанеси знак своей фракции', description: 'Посети гримерный пункт и нанеси боевой грим или символ своей фракции', afterText: 'Знак фракции нанесен', qrCode: 'makeup_faction_5', completed: false },
+      { id: 6, group: 1, category: 'Творчество', title: 'Собери элемент походной экипировки', description: 'Загляни в крафт-станцию и своими руками собери полезный элемент снаряжения.', afterText: 'Элемент экипировки собран', qrCode: 'craft_gear_6', completed: false },
+      { id: 7, group: 2, category: 'Путешествия', title: 'Наметь маршрут будущей экспедиции', description: 'Открой в Городе раздел «Путешествия» и сохрани авиамаршрут, отель или тур, куда хотел бы отправиться до конца года.', afterText: 'Маршрут экспедиции проложен', qrCode: 'travel_route_7', completed: false },
+      { id: 8, group: 2, category: 'Афиша', title: 'Выбери событие для вылазки', description: 'Открой в разделе Город сервис «Афиша», выбери фильм, спектакль или концерт, который хотел бы посетить, и посмотри детали события.', afterText: 'Культурная вылазка запланирована', qrCode: 'afisha_event_8', completed: false },
+      { id: 9, group: 2, category: 'Топливо', title: 'Отметь заправку на маршруте', description: 'Открой в Городе раздел «Топливо» и сохрани удобную заправку на одном из своих обычных маршрутов.', afterText: 'Точка заправки отмечена', qrCode: 'fuel_station_9', completed: false },
+      { id: 10, group: 2, category: 'Супермаркеты', title: 'Собери запас любимых продуктов', description: 'Открой в Городе раздел «Супермаркеты», выбери магазин и добавь в корзину два-три любимых товара.', afterText: 'Запас продуктов собран', qrCode: 'supermarket_supplies_10', completed: false }
     ];
 
     // 5 Wheel Segments Config
     const WHEEL_SEGMENTS = [
-      { id: 'sticker_1', label: 'STICKER PACK 1', color: '#10B981', textColor: '#55FF55', isPrize: true, text: 'Стикерпак #1' },
       { id: 'nothing', label: 'ПРИЗА НЕТ', color: '#292524', textColor: '#9CA3AF', isPrize: false, text: 'Приза нет, но вы держитесь' },
-      { id: 'sticker_2', label: 'STICKER PACK 2', color: '#3B82F6', textColor: '#60A5FA', isPrize: true, text: 'Стикерпак #2' },
-      { id: 'sticker_3', label: 'STICKER PACK 3', color: '#8B5CF6', textColor: '#C084FC', isPrize: true, text: 'Стикерпак #3' },
       { id: 'prize', label: 'ГЛАВНЫЙ ПРИЗ 🎉', color: '#D97706', textColor: '#FDE047', isPrize: true, text: 'ГЛАВНЫЙ ПРИЗ 🎉' }
     ];
 
@@ -371,10 +368,10 @@
 
       drawWheel();
 
-      if (wonPrize) {
+      //if (wonPrize) {
         document.getElementById('spin-btn').classList.add('hidden');
         displayPrizeResult(wonPrize);
-      }
+     // }
     }
 
     function displayPrizeResult(prizeObj) {
@@ -390,7 +387,7 @@
       if (prizeObj.isPrize) {
         card.className = "mt-6 p-4 rounded-xl border-2 border-emerald-500/60 bg-emerald-950/40 text-left relative overflow-hidden";
         badge.className = "text-[11px] font-bold uppercase tracking-wider text-emerald-400 glow-green";
-        badge.innerText = "РЕЗУЛЬТАТ: ВЫИГРЫШ [VAULT-TEC PRIZE]";
+        badge.innerText = "РЕЗУЛЬТАТ: ВЫИГРЫШ [V-TEC PRIZE]";
         icon.innerText = "🎁";
         subtext.innerText = "Предъявите этот экран организаторам на инфостойке для получения приза.";
       } else {
@@ -476,7 +473,11 @@
       let selectedIndex = 0;
 
       try {
-        const response = await fetch('https://xn----7sbksbd0a4anp.xn--p1ai/api/gacha/spin');
+        const response = await fetch('https://xn----7sbksbd0a4anp.xn--p1ai/api/gacha/spin', {
+          headers: {
+            'X-App-Secret': 'vault-tec-super-secret-key-2026'
+          }
+        });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -650,7 +651,7 @@
       document.getElementById('progress-bar').style.width = `${percent}%`;
       document.getElementById('progress-text').innerText = `${currentTargetPoints}/6 Целей Выполнено`;
 
-      const isUnlocked = group1Completed >= 4 && group2Completed >= 2;
+      const isUnlocked = true;
       const banner = document.getElementById('prize-unlock-banner');
       if (isUnlocked) {
         banner.classList.remove('hidden');
